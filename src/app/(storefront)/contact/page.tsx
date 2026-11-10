@@ -14,10 +14,38 @@ export default function ContactPage() {
     subject: "",
     message: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setIsLoading(true);
+    setErrorMessage("");
+
+    try {
+      const res = await fetch("/api/enquiries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "b2b",
+          fullName: formData.name,
+          phone: formData.phone,
+          email: formData.email || undefined,
+          message: `Subject: ${formData.subject || "General Inquiry"}\n${formData.message}`,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSubmitted(true);
+      } else {
+        setErrorMessage(data.error?.message || "Failed to submit message. Please check details.");
+      }
+    } catch {
+      setErrorMessage("Network error connecting to support server.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -115,6 +143,12 @@ export default function ContactPage() {
                 Send Us a Message
               </h2>
 
+              {errorMessage && (
+                <div className="p-3 bg-red-50 border border-red-200 text-xs text-red-800 rounded-[6px]">
+                  {errorMessage}
+                </div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
                   label="Your Name"
@@ -163,7 +197,7 @@ export default function ContactPage() {
                 />
               </div>
 
-              <Button type="submit" variant="primary" size="md" className="w-full sm:w-auto">
+              <Button type="submit" variant="primary" size="md" isLoading={isLoading} className="w-full sm:w-auto">
                 Send Message
               </Button>
             </form>

@@ -20,15 +20,40 @@ export default function B2BPage() {
     message: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage("");
 
-    // Simulate lead submission for demo
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/enquiries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "b2b",
+          fullName: formData.fullName,
+          businessName: formData.businessName || undefined,
+          gstin: formData.gstin || undefined,
+          phone: formData.phone,
+          email: formData.email || undefined,
+          estimatedVolume: formData.estimatedVolume,
+          message: formData.message || `Wholesale inquiry regarding ${formData.productInterest} (estimated volume: ${formData.estimatedVolume}).`,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSubmitted(true);
+      } else {
+        setErrorMessage(data.error?.message || "Failed to submit wholesale enquiry. Please verify details.");
+      }
+    } catch {
+      setErrorMessage("Network error connecting to sales server. Please try again.");
+    } finally {
       setIsLoading(false);
-      setSubmitted(true);
-    }, 800);
+    }
   };
 
   return (
@@ -124,6 +149,12 @@ export default function B2BPage() {
                 Fill out the form below or chat directly with our trade desk on WhatsApp.
               </p>
             </div>
+
+            {errorMessage && (
+              <div className="p-3 bg-red-50 border border-red-200 text-xs text-red-800 rounded-[6px]">
+                {errorMessage}
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input

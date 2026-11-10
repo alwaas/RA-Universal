@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
+    "test": "tsx src/lib/__tests__/backend.test.ts",
+    "test:qa": "tsx src/lib/__tests__/qa_suite.test.ts",
     "db:push": "drizzle-kit push",
     "db:seed": "tsx src/db/seed.ts"
   },

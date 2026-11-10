@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { Package, Tag, Gift, MessageSquare, ArrowLeft, Shield } from "lucide-react";
+import { AdminSignOutButton } from "@/components/admin/AdminSignOutButton";
 
 export default function AdminLayout({
   children,
@@ -26,7 +27,7 @@ export default function AdminLayout({
 
           <nav className="p-3 space-y-1 text-xs font-semibold text-neutral-300">
             <Link
-              href="/admin"
+              href="/admin?tab=products"
               className="flex items-center gap-3 px-3 py-2.5 rounded hover:bg-neutral-800 hover:text-white transition-colors"
             >
               <Package className="w-4 h-4 text-accent-gold" />
@@ -34,7 +35,7 @@ export default function AdminLayout({
             </Link>
 
             <Link
-              href="/admin"
+              href="/admin?tab=tags"
               className="flex items-center gap-3 px-3 py-2.5 rounded hover:bg-neutral-800 hover:text-white transition-colors"
             >
               <Tag className="w-4 h-4 text-semantic-warning" />
@@ -42,7 +43,7 @@ export default function AdminLayout({
             </Link>
 
             <Link
-              href="/admin"
+              href="/admin?tab=offers"
               className="flex items-center gap-3 px-3 py-2.5 rounded hover:bg-neutral-800 hover:text-white transition-colors"
             >
               <Gift className="w-4 h-4 text-brand-primary" />
@@ -50,7 +51,7 @@ export default function AdminLayout({
             </Link>
 
             <Link
-              href="/admin"
+              href="/admin?tab=enquiries"
               className="flex items-center gap-3 px-3 py-2.5 rounded hover:bg-neutral-800 hover:text-white transition-colors"
             >
               <MessageSquare className="w-4 h-4 text-semantic-whatsapp" />
@@ -59,7 +60,7 @@ export default function AdminLayout({
           </nav>
         </div>
 
-        <div className="p-4 border-t border-neutral-800">
+        <div className="p-4 border-t border-neutral-800 space-y-2">
           <Link
             href="/"
             className="flex items-center gap-2 text-xs text-neutral-400 hover:text-white transition-colors"
@@ -67,6 +68,8 @@ export default function AdminLayout({
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Public Store</span>
           </Link>
+
+          <AdminSignOutButton />
         </div>
       </aside>
 

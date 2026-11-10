@@ -1,14 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { ShoppingBag, User, Menu, X, Search } from "lucide-react";
+import { ShoppingBag, User, Menu, X, Search, ShieldCheck } from "lucide-react";
 import { useCartStore } from "@/lib/store/useCartStore";
+import type { SessionUser } from "@/types";
 
 export const Header: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<SessionUser | null>(null);
   const openCart = useCartStore((state) => state.openCart);
   const totalCount = useCartStore((state) => state.getTotalCount());
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.success && data?.data?.user) {
+          setCurrentUser(data.data.user);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-neutral-200">
@@ -51,7 +64,7 @@ export const Header: React.FC = () => {
         </nav>
 
         {/* Right: Actions (Search, Account, Cart) */}
-        <div className="flex items-center space-x-3 sm:space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-3">
           <Link
             href="/shop"
             aria-label="Search collection"
@@ -60,12 +73,27 @@ export const Header: React.FC = () => {
             <Search className="w-5 h-5" />
           </Link>
 
+          {currentUser?.role === "admin" && (
+            <Link
+              href="/admin"
+              aria-label="Admin Dashboard"
+              className="hidden sm:flex items-center gap-1 px-2.5 py-1 text-xs font-semibold bg-neutral-900 text-accent-gold rounded-full hover:bg-neutral-800 transition-colors"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Admin</span>
+            </Link>
+          )}
+
           <Link
-            href="/account/login"
-            aria-label="Customer Account"
-            className="p-2 text-neutral-600 hover:text-brand-primary transition-colors rounded-full hover:bg-neutral-100"
+            href={currentUser ? "/account/profile" : "/account/login"}
+            aria-label={currentUser ? `Account: ${currentUser.fullName}` : "Customer Account"}
+            className="p-2 text-neutral-600 hover:text-brand-primary transition-colors rounded-full hover:bg-neutral-100 relative group flex items-center"
+            title={currentUser ? `Signed in as ${currentUser.fullName}` : "Sign In"}
           >
             <User className="w-5 h-5" />
+            {currentUser && (
+              <span className="absolute bottom-1 right-1 w-2 h-2 bg-emerald-500 rounded-full ring-2 ring-white" />
+            )}
           </Link>
 
           {/* Cart Trigger with Live Counter */}
@@ -124,15 +152,27 @@ export const Header: React.FC = () => {
             Contact & WhatsApp
           </Link>
           <div className="pt-2 border-t border-neutral-100 flex items-center justify-between">
+            {currentUser ? (
+              <Link
+                href="/account/profile"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-xs font-semibold text-brand-primary flex items-center gap-1.5"
+              >
+                <User className="w-3.5 h-3.5" />
+                <span>My Account ({currentUser.fullName.split(" ")[0]})</span>
+              </Link>
+            ) : (
+              <Link
+                href="/account/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-xs font-semibold text-brand-primary"
+              >
+                Sign In / Register
+              </Link>
+            )}
+
             <Link
-              href="/account/login"
-              onClick={() => setMobileMenuOpen(false)}
-              className="text-xs font-semibold text-brand-primary"
-            >
-              Sign In / Register
-            </Link>
-            <Link
-              href="/admin/login"
+              href={currentUser?.role === "admin" ? "/admin" : "/admin/login"}
               onClick={() => setMobileMenuOpen(false)}
               className="text-xs text-neutral-500 hover:text-neutral-800"
             >
