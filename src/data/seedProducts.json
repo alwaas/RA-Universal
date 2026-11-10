@@ -1,0 +1,265 @@
+[
+  {
+    "id": "prod-01",
+    "title": "Classic Bengal Cotton Gamcha - Heritage Red Check",
+    "slug": "classic-bengal-cotton-gamcha-red",
+    "category": "gamchas",
+    "fabric": "100% Pure Bengal Weave Cotton",
+    "description": "Traditional Bengali check handloom gamcha woven with 100% pure desi cotton. Exceptional water absorption, rapid drying, and durable double-stitched borders.",
+    "mrp": 399,
+    "sellingPrice": 199,
+    "discountPercentage": 50,
+    "status": "active",
+    "stockCount": 25,
+    "badge": {
+      "id": "tag-best-seller",
+      "name": "Best Selling",
+      "slug": "best-selling",
+      "badgeColor": "yellow"
+    },
+    "colors": [
+      { "id": "c-1", "name": "Traditional Red", "hexCode": "#DC2626" },
+      { "id": "c-2", "name": "Forest Green", "hexCode": "#15803D" },
+      { "id": "c-3", "name": "Indigo Blue", "hexCode": "#1D4ED8" }
+    ],
+    "images": [
+      {
+        "id": "img-1",
+        "imageUrl": "https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=800&auto=format&fit=crop&q=80",
+        "altText": "Classic Bengal Cotton Gamcha - Heritage Red Check",
+        "isPrimary": true
+      }
+    ],
+    "createdAt": "2026-01-01T00:00:00Z",
+    "updatedAt": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "prod-02",
+    "title": "Sambalpuri Handloom Pure Cotton Men's Gamcha",
+    "slug": "sambalpuri-handloom-cotton-gamcha",
+    "category": "gamchas",
+    "fabric": "Sambalpuri Hand-Spun Cotton with Ikat Border",
+    "description": "Authentic Odisha Sambalpuri hand-spun cotton gamcha featuring traditional geometric tie-and-dye Ikat patterns on the side borders.",
+    "mrp": 499,
+    "sellingPrice": 279,
+    "discountPercentage": 44,
+    "status": "active",
+    "stockCount": 3,
+    "badge": {
+      "id": "tag-low-stock",
+      "name": "Only 2-3 Left",
+      "slug": "only-2-3-left",
+      "badgeColor": "orange"
+    },
+    "colors": [
+      { "id": "c-4", "name": "Maroon & Black", "hexCode": "#800000" },
+      { "id": "c-5", "name": "Mustard Ochre", "hexCode": "#CA8A04" }
+    ],
+    "images": [
+      {
+        "id": "img-2",
+        "imageUrl": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80",
+        "altText": "Sambalpuri Handloom Pure Cotton Men's Gamcha",
+        "isPrimary": true
+      }
+    ],
+    "createdAt": "2026-01-01T00:00:00Z",
+    "updatedAt": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "prod-03",
+    "title": "Assam Traditional Phulam Gamosa / Gamcha",
+    "slug": "assam-phulam-gamosa-cotton",
+    "category": "gamchas",
+    "fabric": "Assam Pat Weave Breathable Cotton",
+    "description": "Hand-crafted Assamese Gamosa with symbolic woven red floral motifs (phulam) on unbleached natural white cotton yarn.",
+    "mrp": 599,
+    "sellingPrice": 349,
+    "discountPercentage": 42,
+    "status": "active",
+    "stockCount": 14,
+    "badge": {
+      "id": "tag-sale",
+      "name": "Sale",
+      "slug": "sale",
+      "badgeColor": "red"
+    },
+    "colors": [
+      { "id": "c-6", "name": "White with Red Flora", "hexCode": "#B91C1C" }
+    ],
+    "images": [
+      {
+        "id": "img-3",
+        "imageUrl": "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=800&auto=format&fit=crop&q=80",
+        "altText": "Assam Traditional Phulam Gamosa",
+        "isPrimary": true
+      }
+    ],
+    "createdAt": "2026-01-01T00:00:00Z",
+    "updatedAt": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "prod-04",
+    "title": "Chanderi Silk Golden Zari Border Women's Dupatta",
+    "slug": "chanderi-silk-golden-zari-dupatta",
+    "category": "scarves_dupattas",
+    "fabric": "Pure Chanderi Silk-Cotton Blend",
+    "description": "Sheer, lightweight Chanderi dupatta embellished with hand-woven golden zari bootis and a lustrous gold border. Perfect for festive and formal wear.",
+    "mrp": 1499,
+    "sellingPrice": 799,
+    "discountPercentage": 47,
+    "status": "active",
+    "stockCount": 16,
+    "badge": {
+      "id": "tag-best-seller",
+      "name": "Best Selling",
+      "slug": "best-selling",
+      "badgeColor": "yellow"
+    },
+    "colors": [
+      { "id": "c-7", "name": "Peacock Blue", "hexCode": "#0284C7" },
+      { "id": "c-8", "name": "Rani Pink", "hexCode": "#BE185D" },
+      { "id": "c-9", "name": "Emerald Green", "hexCode": "#047857" }
+    ],
+    "images": [
+      {
+        "id": "img-4",
+        "imageUrl": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&auto=format&fit=crop&q=80",
+        "altText": "Chanderi Silk Golden Zari Border Women's Dupatta",
+        "isPrimary": true
+      }
+    ],
+    "createdAt": "2026-01-01T00:00:00Z",
+    "updatedAt": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "prod-05",
+    "title": "Handcrafted Kalamkari Natural Dye Cotton Dupatta",
+    "slug": "kalamkari-natural-dye-cotton-dupatta",
+    "category": "scarves_dupattas",
+    "fabric": "100% Breathable Mulmul Cotton",
+    "description": "Hand-block printed Kalamkari dupatta crafted by traditional Andhra artisans using organic vegetable and fermented indigo dyes.",
+    "mrp": 1199,
+    "sellingPrice": 599,
+    "discountPercentage": 50,
+    "status": "active",
+    "stockCount": 11,
+    "badge": {
+      "id": "tag-sale",
+      "name": "Sale",
+      "slug": "sale",
+      "badgeColor": "red"
+    },
+    "colors": [
+      { "id": "c-10", "name": "Indigo Navy", "hexCode": "#1E3A8A" },
+      { "id": "c-11", "name": "Earthy Ochre", "hexCode": "#B45309" }
+    ],
+    "images": [
+      {
+        "id": "img-5",
+        "imageUrl": "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800&auto=format&fit=crop&q=80",
+        "altText": "Handcrafted Kalamkari Natural Dye Cotton Dupatta",
+        "isPrimary": true
+      }
+    ],
+    "createdAt": "2026-01-01T00:00:00Z",
+    "updatedAt": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "prod-06",
+    "title": "Amritsari Phulkari Embroidered Festive Dupatta",
+    "slug": "amritsari-phulkari-embroidered-dupatta",
+    "category": "scarves_dupattas",
+    "fabric": "Lightweight Georgette with Silk Floss Embroidery",
+    "description": "Vibrant Punjabi Phulkari dupatta covered with dense geometric floral motifs hand-embroidered with untwisted silk floss thread.",
+    "mrp": 1999,
+    "sellingPrice": 1099,
+    "discountPercentage": 45,
+    "status": "active",
+    "stockCount": 2,
+    "badge": {
+      "id": "tag-low-stock",
+      "name": "Only 2-3 Left",
+      "slug": "only-2-3-left",
+      "badgeColor": "orange"
+    },
+    "colors": [
+      { "id": "c-12", "name": "Festive Red", "hexCode": "#DC2626" },
+      { "id": "c-13", "name": "Basanti Yellow", "hexCode": "#EAB308" }
+    ],
+    "images": [
+      {
+        "id": "img-6",
+        "imageUrl": "https://images.unsplash.com/photo-1610030469668-93510cb67655?w=800&auto=format&fit=crop&q=80",
+        "altText": "Amritsari Phulkari Embroidered Festive Dupatta",
+        "isPrimary": true
+      }
+    ],
+    "createdAt": "2026-01-01T00:00:00Z",
+    "updatedAt": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "prod-07",
+    "title": "Hand-Dyed Indigo Check Handloom Gamcha",
+    "slug": "hand-dyed-indigo-check-gamcha",
+    "category": "gamchas",
+    "fabric": "Natural Fermented Indigo-Dyed Cotton",
+    "description": "Naturally fermented indigo-dyed cotton gamcha. Demonstrates out-of-stock badge and disabled purchase flow.",
+    "mrp": 449,
+    "sellingPrice": 229,
+    "discountPercentage": 49,
+    "status": "active",
+    "stockCount": 0,
+    "badge": {
+      "id": "tag-out-of-stock",
+      "name": "Out of Stock",
+      "slug": "out-of-stock",
+      "badgeColor": "gray"
+    },
+    "colors": [
+      { "id": "c-14", "name": "Natural Indigo", "hexCode": "#1E3A8A" }
+    ],
+    "images": [
+      {
+        "id": "img-7",
+        "imageUrl": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80",
+        "altText": "Hand-Dyed Indigo Check Handloom Gamcha",
+        "isPrimary": true
+      }
+    ],
+    "createdAt": "2026-01-01T00:00:00Z",
+    "updatedAt": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "prod-08",
+    "title": "Bandhani Tie & Dye Jaipuri Georgette Dupatta",
+    "slug": "bandhani-tie-dye-jaipuri-georgette-dupatta",
+    "category": "scarves_dupattas",
+    "fabric": "Crinkled Pure Georgette",
+    "description": "Traditional Rajasthani Rai Bandhej knots on soft crinkled georgette. Rich dual-tone palette.",
+    "mrp": 1399,
+    "sellingPrice": 749,
+    "discountPercentage": 46,
+    "status": "active",
+    "stockCount": 0,
+    "badge": {
+      "id": "tag-out-of-stock",
+      "name": "Out of Stock",
+      "slug": "out-of-stock",
+      "badgeColor": "gray"
+    },
+    "colors": [
+      { "id": "c-15", "name": "Dual Red & Yellow", "hexCode": "#DC2626" }
+    ],
+    "images": [
+      {
+        "id": "img-8",
+        "imageUrl": "https://images.unsplash.com/photo-1610030469668-93510cb67655?w=800&auto=format&fit=crop&q=80",
+        "altText": "Bandhani Tie & Dye Jaipuri Georgette Dupatta",
+        "isPrimary": true
+      }
+    ],
+    "createdAt": "2026-01-01T00:00:00Z",
+    "updatedAt": "2026-01-01T00:00:00Z"
+  }
+]
