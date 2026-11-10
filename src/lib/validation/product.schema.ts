@@ -1,8 +1,9 @@
 import { z } from "zod";
 
 export const productImageSchema = z.object({
-  imageUrl: z.string().url("Must be a valid image URL"),
+  imageUrl: z.string().min(1, "Image URL or path is required"),
   altText: z.string().max(255).optional(),
+  colorName: z.string().max(50).optional().nullable(),
   displayOrder: z.number().int().default(0),
   isPrimary: z.boolean().default(false),
 });
@@ -12,6 +13,7 @@ export const productColorSchema = z.object({
   hexCode: z
     .string()
     .regex(/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/, "Valid hexadecimal color required (e.g. #DC2626)"),
+  imageUrl: z.string().min(1).optional().nullable(),
   inStock: z.boolean().default(true),
 });
 

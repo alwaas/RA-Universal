@@ -19,6 +19,14 @@ import {
   X,
   Phone,
   Mail,
+  Upload,
+  ShieldCheck,
+  Key,
+  Lock,
+  Image as ImageIcon,
+  Star,
+  RefreshCw,
+  Server,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -63,7 +71,23 @@ function AdminDashboardContent() {
   const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Create form state
+  // Multi-angle photo and color interfaces for product form
+  interface FormColorItem {
+    id?: string;
+    name: string;
+    hexCode: string;
+    imageUrl?: string;
+  }
+
+  interface FormImageItem {
+    id?: string;
+    imageUrl: string;
+    altText?: string; // Angle name: e.g. "Front View", "Back View", "Side / Border Angle", "Texture / Weave Detail", "Model Pose"
+    colorName?: string; // Associated color name, or "" for General
+    isPrimary: boolean;
+  }
+
+  // Create form state with multi-color & multi-angle support
   const [newProductForm, setNewProductForm] = useState({
     title: "",
     category: "scarves_dupattas" as ProductCategory,
@@ -72,11 +96,33 @@ function AdminDashboardContent() {
     mrp: 1000,
     sellingPrice: 599,
     stockCount: 15,
-    imageUrl: "https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=800",
-    colorName: "Crimson Red",
-    colorHex: "#DC2626",
-    badgeName: "",
+    colors: [
+      { name: "Traditional Red", hexCode: "#DC2626", imageUrl: "" },
+    ] as FormColorItem[],
+    images: [
+      {
+        imageUrl: "https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=800",
+        altText: "Front View",
+        colorName: "Traditional Red",
+        isPrimary: true,
+      },
+    ] as FormImageItem[],
   });
+
+  const [selectedUploadColor, setSelectedUploadColor] = useState<string>("Traditional Red");
+  const [selectedAngleLabel, setSelectedAngleLabel] = useState<string>("Front View");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [customImageUrlInput, setCustomImageUrlInput] = useState("");
+
+  // Health and Password Rotation state (Req 5, 6, 10)
+  const [healthData, setHealthData] = useState<any>(null);
+  const [isLoadingHealth, setIsLoadingHealth] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [isRotatingPassword, setIsRotatingPassword] = useState(false);
 
   // Offers state
   const [offer, setOffer] = useState<OfferState | null>(null);
@@ -131,11 +177,407 @@ function AdminDashboardContent() {
     }
   };
 
+  // Load Admin Diagnostic Health
+  const fetchAdminHealth = async () => {
+    try {
+      setIsLoadingHealth(true);
+      const res = await fetch("/api/admin/health");
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setHealthData(data.data);
+      }
+    } catch {
+      console.warn("Failed to load admin health diagnostics");
+    } finally {
+      setIsLoadingHealth(false);
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
     fetchOffer();
     fetchEnquiries();
-  }, []);
+    if (activeTab === "security") {
+      fetchAdminHealth();
+    }
+  }, [activeTab]);
+
+  // Handle Server-Side Multi-File Image Upload with Color & Angle Mapping
+  const handleFileUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    targetForm: "create" | "edit" = "create"
+  ) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const targetColor = selectedUploadColor;
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      formData.append("files", files[i]);
+    }
+
+    try {
+      setIsUploadingImage(true);
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const newUrls: string[] =
+          data.data.urls ||
+          (data.data.url ? [data.data.url] : data.data.imageUrl ? [data.data.imageUrl] : []);
+
+        if (newUrls.length > 0) {
+          const defaultAngles = [
+            "Front View",
+            "Back View",
+            "Side / Border Angle",
+            "Texture / Weave Detail",
+            "Model Pose",
+          ];
+
+          if (targetForm === "create") {
+            setNewProductForm((prev) => {
+              const newImages: FormImageItem[] = newUrls.map((url, idx) => ({
+                imageUrl: url,
+                altText:
+                  newUrls.length === 1 && selectedAngleLabel
+                    ? selectedAngleLabel
+                    : defaultAngles[idx % defaultAngles.length] || `Angle ${prev.images.length + idx + 1}`,
+                colorName: targetColor || (prev.colors[0]?.name || ""),
+                isPrimary: prev.images.length === 0 && idx === 0,
+              }));
+
+              const nextImages = [...prev.images, ...newImages];
+              // Automatically sync the color's primary photo if currently empty
+              const nextColors = prev.colors.map((c) => {
+                if (
+                  (!c.imageUrl || c.imageUrl === "") &&
+                  (c.name === targetColor || (!targetColor && c === prev.colors[0]))
+                ) {
+                  return { ...c, imageUrl: newUrls[0] };
+                }
+                return c;
+              });
+
+              return {
+                ...prev,
+                images: nextImages,
+                colors: nextColors,
+              };
+            });
+          } else if (targetForm === "edit" && editingProduct) {
+            setEditingProduct((prev) => {
+              if (!prev) return null;
+              const newImages = newUrls.map((url, idx) => ({
+                id: `img-new-${Date.now()}-${idx}`,
+                imageUrl: url,
+                altText:
+                  newUrls.length === 1 && selectedAngleLabel
+                    ? selectedAngleLabel
+                    : defaultAngles[idx % defaultAngles.length] || `Angle ${prev.images.length + idx + 1}`,
+                colorName: targetColor || (prev.colors[0]?.name || ""),
+                isPrimary: prev.images.length === 0 && idx === 0,
+              }));
+
+              return {
+                ...prev,
+                images: [...prev.images, ...newImages],
+              };
+            });
+          }
+
+          setFeedback({
+            type: "success",
+            text: `Successfully uploaded ${newUrls.length} photo(s) for ${
+              targetColor ? `color "${targetColor}"` : "product"
+            } (${data.data.provider || "server storage"})!`,
+          });
+        }
+      } else {
+        setFeedback({ type: "error", text: data.error?.message || "Failed to upload image(s)" });
+      }
+    } catch {
+      setFeedback({ type: "error", text: "Network error occurred during image upload" });
+    } finally {
+      setIsUploadingImage(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleAddImageUrl = (targetForm: "create" | "edit" = "create") => {
+    if (!customImageUrlInput || !customImageUrlInput.trim()) return;
+    const trimmed = customImageUrlInput.trim();
+    const targetColor = selectedUploadColor;
+
+    if (targetForm === "create") {
+      setNewProductForm((prev) => {
+        const newImg: FormImageItem = {
+          imageUrl: trimmed,
+          altText: selectedAngleLabel || "Front View",
+          colorName: targetColor || (prev.colors[0]?.name || ""),
+          isPrimary: prev.images.length === 0,
+        };
+        const nextImages = [...prev.images, newImg];
+        const nextColors = prev.colors.map((c) => {
+          if (
+            (!c.imageUrl || c.imageUrl === "") &&
+            (c.name === targetColor || (!targetColor && c === prev.colors[0]))
+          ) {
+            return { ...c, imageUrl: trimmed };
+          }
+          return c;
+        });
+        return {
+          ...prev,
+          images: nextImages,
+          colors: nextColors,
+        };
+      });
+    } else if (targetForm === "edit" && editingProduct) {
+      setEditingProduct((prev) => {
+        if (!prev) return null;
+        const newImg = {
+          id: `img-url-${Date.now()}`,
+          imageUrl: trimmed,
+          altText: selectedAngleLabel || "Front View",
+          colorName: targetColor || (prev.colors[0]?.name || ""),
+          isPrimary: prev.images.length === 0,
+        };
+        return {
+          ...prev,
+          images: [...prev.images, newImg],
+        };
+      });
+    }
+    setCustomImageUrlInput("");
+  };
+
+  const handleSetPrimaryImage = (index: number, targetForm: "create" | "edit" = "create") => {
+    if (targetForm === "create") {
+      setNewProductForm((prev) => ({
+        ...prev,
+        images: prev.images.map((img, i) => ({ ...img, isPrimary: i === index })),
+      }));
+    } else if (targetForm === "edit" && editingProduct) {
+      setEditingProduct((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          images: prev.images.map((img, i) => ({ ...img, isPrimary: i === index })),
+        };
+      });
+    }
+  };
+
+  const handleRemoveImage = (index: number, targetForm: "create" | "edit" = "create") => {
+    if (targetForm === "create") {
+      setNewProductForm((prev) => {
+        const filtered = prev.images.filter((_, i) => i !== index);
+        if (filtered.length > 0 && !filtered.some((img) => img.isPrimary)) {
+          filtered[0].isPrimary = true;
+        }
+        return { ...prev, images: filtered };
+      });
+    } else if (targetForm === "edit" && editingProduct) {
+      setEditingProduct((prev) => {
+        if (!prev) return null;
+        const filtered = prev.images.filter((_, i) => i !== index);
+        if (filtered.length > 0 && !filtered.some((img) => img.isPrimary)) {
+          filtered[0].isPrimary = true;
+        }
+        return { ...prev, images: filtered };
+      });
+    }
+  };
+
+  const handleUpdateImageColor = (
+    index: number,
+    colorName: string,
+    targetForm: "create" | "edit" = "create"
+  ) => {
+    if (targetForm === "create") {
+      setNewProductForm((prev) => ({
+        ...prev,
+        images: prev.images.map((img, i) => (i === index ? { ...img, colorName } : img)),
+      }));
+    } else if (targetForm === "edit" && editingProduct) {
+      setEditingProduct((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          images: prev.images.map((img, i) => (i === index ? { ...img, colorName } : img)),
+        };
+      });
+    }
+  };
+
+  const handleUpdateImageAngle = (
+    index: number,
+    altText: string,
+    targetForm: "create" | "edit" = "create"
+  ) => {
+    if (targetForm === "create") {
+      setNewProductForm((prev) => ({
+        ...prev,
+        images: prev.images.map((img, i) => (i === index ? { ...img, altText } : img)),
+      }));
+    } else if (targetForm === "edit" && editingProduct) {
+      setEditingProduct((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          images: prev.images.map((img, i) => (i === index ? { ...img, altText } : img)),
+        };
+      });
+    }
+  };
+
+  // Color variant management helpers
+  const handleAddColor = (targetForm: "create" | "edit" = "create") => {
+    const defaultColorNames = [
+      "Forest Green",
+      "Indigo Blue",
+      "Mustard Ochre",
+      "Royal Maroon",
+      "Jet Black",
+      "Ivory White",
+    ];
+    if (targetForm === "create") {
+      setNewProductForm((prev) => {
+        const nextIdx = prev.colors.length;
+        const nextName =
+          defaultColorNames[nextIdx % defaultColorNames.length] || `Color ${nextIdx + 1}`;
+        const nextHex =
+          ["#15803D", "#1D4ED8", "#CA8A04", "#800000", "#171717", "#F5F5DC"][nextIdx % 6] ||
+          "#4B5563";
+        return {
+          ...prev,
+          colors: [...prev.colors, { name: nextName, hexCode: nextHex, imageUrl: "" }],
+        };
+      });
+    } else if (targetForm === "edit" && editingProduct) {
+      setEditingProduct((prev) => {
+        if (!prev) return null;
+        const nextIdx = prev.colors.length;
+        const nextName =
+          defaultColorNames[nextIdx % defaultColorNames.length] || `Color ${nextIdx + 1}`;
+        const nextHex =
+          ["#15803D", "#1D4ED8", "#CA8A04", "#800000", "#171717", "#F5F5DC"][nextIdx % 6] ||
+          "#4B5563";
+        return {
+          ...prev,
+          colors: [
+            ...prev.colors,
+            { id: `c-${Date.now()}`, name: nextName, hexCode: nextHex, imageUrl: "" },
+          ],
+        };
+      });
+    }
+  };
+
+  const handleRemoveColor = (index: number, targetForm: "create" | "edit" = "create") => {
+    if (targetForm === "create") {
+      setNewProductForm((prev) => {
+        if (prev.colors.length <= 1) return prev;
+        const removed = prev.colors[index].name;
+        return {
+          ...prev,
+          colors: prev.colors.filter((_, i) => i !== index),
+          images: prev.images.map((img) =>
+            img.colorName === removed ? { ...img, colorName: "" } : img
+          ),
+        };
+      });
+    } else if (targetForm === "edit" && editingProduct) {
+      setEditingProduct((prev) => {
+        if (!prev || prev.colors.length <= 1) return prev;
+        const removed = prev.colors[index].name;
+        return {
+          ...prev,
+          colors: prev.colors.filter((_, i) => i !== index),
+          images: prev.images.map((img) =>
+            img.colorName === removed ? { ...img, colorName: "" } : img
+          ),
+        };
+      });
+    }
+  };
+
+  const handleColorChange = (
+    index: number,
+    field: "name" | "hexCode" | "imageUrl",
+    value: string,
+    targetForm: "create" | "edit" = "create"
+  ) => {
+    if (targetForm === "create") {
+      setNewProductForm((prev) => {
+        const oldName = prev.colors[index]?.name;
+        const updated = prev.colors.map((c, i) => (i === index ? { ...c, [field]: value } : c));
+        let updatedImages = prev.images;
+        if (field === "name" && oldName) {
+          updatedImages = prev.images.map((img) =>
+            img.colorName === oldName ? { ...img, colorName: value } : img
+          );
+          if (selectedUploadColor === oldName) setSelectedUploadColor(value);
+        }
+        return { ...prev, colors: updated, images: updatedImages };
+      });
+    } else if (targetForm === "edit" && editingProduct) {
+      setEditingProduct((prev) => {
+        if (!prev) return null;
+        const oldName = prev.colors[index]?.name;
+        const updated = prev.colors.map((c, i) => (i === index ? { ...c, [field]: value } : c));
+        let updatedImages = prev.images;
+        if (field === "name" && oldName) {
+          updatedImages = prev.images.map((img) =>
+            img.colorName === oldName ? { ...img, colorName: value } : img
+          );
+          if (selectedUploadColor === oldName) setSelectedUploadColor(value);
+        }
+        return { ...prev, colors: updated, images: updatedImages };
+      });
+    }
+  };
+
+  // Handle Admin Password Rotation
+  const handleRotatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setFeedback({ type: "error", text: "New password and confirmation do not match." });
+      return;
+    }
+    if (passwordForm.newPassword.length < 8) {
+      setFeedback({ type: "error", text: "New password must be at least 8 characters long." });
+      return;
+    }
+
+    try {
+      setIsRotatingPassword(true);
+      const res = await fetch("/api/admin/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setFeedback({ type: "success", text: "Admin password successfully updated and rotated!" });
+        setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+        fetchAdminHealth();
+      } else {
+        setFeedback({ type: "error", text: data.error?.message || "Failed to rotate password." });
+      }
+    } catch {
+      setFeedback({ type: "error", text: "Network error occurred while updating password." });
+    } finally {
+      setIsRotatingPassword(false);
+    }
+  };
 
   // Quick Toggle Product Status
   const handleToggleStatus = async (product: Product) => {
@@ -173,6 +615,33 @@ function AdminDashboardContent() {
     setFeedback(null);
 
     try {
+      const finalImages =
+        newProductForm.images.length > 0
+          ? newProductForm.images
+          : [
+              {
+                imageUrl: "https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=800",
+                isPrimary: true,
+                altText: "Front View",
+                colorName: newProductForm.colors[0]?.name || "",
+              },
+            ];
+
+      const primaryImg =
+        finalImages.find((img) => img.isPrimary)?.imageUrl || finalImages[0]?.imageUrl;
+
+      const finalColors = newProductForm.colors.map((c) => {
+        const matchingImg = finalImages.find(
+          (img) => img.colorName && img.colorName.toLowerCase() === c.name.toLowerCase()
+        );
+        return {
+          name: c.name,
+          hexCode: c.hexCode,
+          imageUrl: c.imageUrl || matchingImg?.imageUrl || primaryImg,
+          inStock: true,
+        };
+      });
+
       const res = await fetch("/api/admin/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -184,8 +653,14 @@ function AdminDashboardContent() {
           mrp: Number(newProductForm.mrp),
           sellingPrice: Number(newProductForm.sellingPrice),
           stockCount: Number(newProductForm.stockCount),
-          images: [{ imageUrl: newProductForm.imageUrl, isPrimary: true }],
-          colors: [{ name: newProductForm.colorName, hexCode: newProductForm.colorHex }],
+          images: finalImages.map((img, idx) => ({
+            imageUrl: img.imageUrl,
+            altText: img.altText || `Angle ${idx + 1}`,
+            colorName: img.colorName || null,
+            displayOrder: idx,
+            isPrimary: img.isPrimary,
+          })),
+          colors: finalColors,
         }),
       });
 
@@ -218,6 +693,23 @@ function AdminDashboardContent() {
     setFeedback(null);
 
     try {
+      const finalImages =
+        editingProduct.images && editingProduct.images.length > 0 ? editingProduct.images : [];
+      const primaryImg =
+        finalImages.find((img) => img.isPrimary)?.imageUrl || finalImages[0]?.imageUrl || "";
+
+      const finalColors = (editingProduct.colors || []).map((c) => {
+        const matchingImg = finalImages.find(
+          (img) => img.colorName && img.colorName.toLowerCase() === c.name.toLowerCase()
+        );
+        return {
+          name: c.name,
+          hexCode: c.hexCode,
+          imageUrl: c.imageUrl || matchingImg?.imageUrl || primaryImg,
+          inStock: c.inStock ?? true,
+        };
+      });
+
       const res = await fetch(`/api/admin/products/${editingProduct.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -225,10 +717,19 @@ function AdminDashboardContent() {
           title: editingProduct.title,
           fabric: editingProduct.fabric,
           category: editingProduct.category,
+          description: editingProduct.description,
           mrp: Number(editingProduct.mrp),
           sellingPrice: Number(editingProduct.sellingPrice),
           stockCount: Number(editingProduct.stockCount),
           status: editingProduct.status,
+          images: finalImages.map((img, idx) => ({
+            imageUrl: img.imageUrl,
+            altText: img.altText || `Angle ${idx + 1}`,
+            colorName: img.colorName || null,
+            displayOrder: idx,
+            isPrimary: img.isPrimary,
+          })),
+          colors: finalColors,
         }),
       });
 
@@ -378,6 +879,18 @@ function AdminDashboardContent() {
         >
           <MessageSquare className="w-4 h-4 text-semantic-whatsapp" />
           <span>B2B Enquiries ({enquiries.length})</span>
+        </Link>
+
+        <Link
+          href="/admin?tab=security"
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-[6px] transition-colors whitespace-nowrap ${
+            activeTab === "security"
+              ? "bg-neutral-900 text-white"
+              : "bg-white text-neutral-700 border border-neutral-200 hover:bg-neutral-50"
+          }`}
+        >
+          <ShieldCheck className="w-4 h-4 text-emerald-500" />
+          <span>Security & System Health</span>
         </Link>
       </div>
 
@@ -793,7 +1306,137 @@ function AdminDashboardContent() {
       )}
 
       {/* ================================================================== */}
-      {/* MODAL: ADD NEW PRODUCT */}
+      {/* TAB: SECURITY & SYSTEM HEALTH (Req 5, 6, 10) */}
+      {/* ================================================================== */}
+      {activeTab === "security" && (
+        <div className="space-y-6">
+          {/* Health Diagnostics Card */}
+          <div className="bg-white border border-neutral-300/80 rounded-[8px] p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-200">
+              <div className="flex items-center gap-2">
+                <Server className="w-5 h-5 text-brand-primary" />
+                <h2 className="font-serif text-lg font-bold text-neutral-900">
+                  Real-Time Infrastructure Health
+                </h2>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchAdminHealth}
+                isLoading={isLoadingHealth}
+                className="flex items-center gap-1.5"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Refresh Diagnostics</span>
+              </Button>
+            </div>
+
+            {healthData ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div className="p-4 rounded-[6px] bg-neutral-50 border border-neutral-200 space-y-1">
+                  <span className="text-neutral-500 font-semibold">PostgreSQL Database</span>
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={`w-2.5 h-2.5 rounded-full ${
+                        healthData.diagnostics?.database?.status === "connected"
+                          ? "bg-emerald-500"
+                          : "bg-red-500"
+                      }`}
+                    />
+                    <span className="font-bold text-neutral-900 uppercase">
+                      {healthData.diagnostics?.database?.status || "Unknown"}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-neutral-500">
+                    Query Latency: {healthData.diagnostics?.database?.latencyMs != null ? `${healthData.diagnostics.database.latencyMs} ms` : "N/A"}
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-[6px] bg-neutral-50 border border-neutral-200 space-y-1">
+                  <span className="text-neutral-500 font-semibold">Image Asset Storage</span>
+                  <p className="font-bold text-neutral-900 capitalize">
+                    {healthData.diagnostics?.storage?.provider || "Local / Public"}
+                  </p>
+                  <p className="text-[11px] text-neutral-500">
+                    {healthData.diagnostics?.storage?.isCloudinaryConfigured
+                      ? "Cloudinary secure server-side configured"
+                      : "Using local public/uploads directory"}
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-[6px] bg-neutral-50 border border-neutral-200 space-y-1">
+                  <span className="text-neutral-500 font-semibold">Environment & Memory</span>
+                  <p className="font-bold text-neutral-900">
+                    Node: {healthData.environment}
+                  </p>
+                  <p className="text-[11px] text-neutral-500">
+                    RSS Memory: {healthData.diagnostics?.memoryUsageMb} MB | Uptime: {healthData.uptimeSeconds}s
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-xs text-neutral-500 py-3">
+                Click &quot;Refresh Diagnostics&quot; to probe current PostgreSQL and server metrics.
+              </div>
+            )}
+          </div>
+
+          {/* Admin Password Rotation Card (Req 10) */}
+          <div className="bg-white border border-neutral-300/80 rounded-[8px] p-6 shadow-sm space-y-4">
+            <div className="pb-3 border-b border-neutral-200">
+              <div className="flex items-center gap-2">
+                <Lock className="w-5 h-5 text-accent-gold" />
+                <h2 className="font-serif text-lg font-bold text-neutral-900">
+                  Rotate Administrator Password
+                </h2>
+              </div>
+              <p className="text-xs text-neutral-600 mt-1">
+                Protect your production store by rotating the initial bootstrap credentials. Passwords are encrypted with bcrypt (12 rounds) in the database.
+              </p>
+            </div>
+
+            <form onSubmit={handleRotatePassword} className="max-w-md space-y-4">
+              <Input
+                label="Current Password"
+                type="password"
+                required
+                placeholder="Enter existing admin password"
+                value={passwordForm.currentPassword}
+                onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+              />
+
+              <Input
+                label="New Password"
+                type="password"
+                required
+                placeholder="Minimum 8 characters"
+                value={passwordForm.newPassword}
+                onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+              />
+
+              <Input
+                label="Confirm New Password"
+                type="password"
+                required
+                placeholder="Repeat new password"
+                value={passwordForm.confirmPassword}
+                onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+              />
+
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                isLoading={isRotatingPassword}
+                className="w-full flex items-center justify-center gap-1.5"
+              >
+                <Key className="w-4 h-4" />
+                <span>Update Admin Password</span>
+              </Button>
+            </form>
+          </div>
+        </div>
+      )}
       {/* ================================================================== */}
       {isCreateModalOpen && (
         <Modal
@@ -862,27 +1505,271 @@ function AdminDashboardContent() {
               />
             </div>
 
-            <Input
-              label="Primary Image URL"
-              required
-              value={newProductForm.imageUrl}
-              onChange={(e) => setNewProductForm({ ...newProductForm, imageUrl: e.target.value })}
-            />
+            {/* ========================================================== */}
+            {/* 1. COLOR VARIANTS MANAGEMENT */}
+            {/* ========================================================== */}
+            <div className="p-3.5 rounded-[8px] bg-neutral-50 border border-neutral-200 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="block text-xs font-bold text-neutral-800">
+                    Product Color Variants ({newProductForm.colors.length})
+                  </label>
+                  <p className="text-[11px] text-neutral-500">
+                    Define color swatches. Multiple angle photos can be linked to each color.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleAddColor("create")}
+                  className="h-7 text-xs flex items-center gap-1"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>Add Color</span>
+                </Button>
+              </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <Input
-                label="Color Name"
-                required
-                value={newProductForm.colorName}
-                onChange={(e) => setNewProductForm({ ...newProductForm, colorName: e.target.value })}
-              />
+              <div className="space-y-2">
+                {newProductForm.colors.map((color, cIdx) => {
+                  const photoCount = newProductForm.images.filter(
+                    (img) => img.colorName && img.colorName.toLowerCase() === color.name.toLowerCase()
+                  ).length;
 
-              <Input
-                label="Color Hex Code"
-                required
-                value={newProductForm.colorHex}
-                onChange={(e) => setNewProductForm({ ...newProductForm, colorHex: e.target.value })}
-              />
+                  return (
+                    <div
+                      key={cIdx}
+                      className="flex flex-wrap items-center gap-2 p-2 bg-white rounded-[6px] border border-neutral-200"
+                    >
+                      {/* Color Preview & Native Picker */}
+                      <div className="relative flex items-center">
+                        <input
+                          type="color"
+                          value={color.hexCode}
+                          onChange={(e) => handleColorChange(cIdx, "hexCode", e.target.value, "create")}
+                          className="w-7 h-7 p-0 border border-neutral-300 rounded cursor-pointer"
+                          title="Click to pick color"
+                        />
+                      </div>
+
+                      {/* Color Name Input */}
+                      <input
+                        type="text"
+                        placeholder="Color Name (e.g. Crimson Red)"
+                        value={color.name}
+                        onChange={(e) => handleColorChange(cIdx, "name", e.target.value, "create")}
+                        className="flex-1 min-w-[130px] h-8 px-2.5 text-xs bg-white border border-neutral-300 rounded focus:outline-none focus:border-brand-primary font-medium"
+                      />
+
+                      {/* Color Hex Input */}
+                      <input
+                        type="text"
+                        placeholder="#DC2626"
+                        value={color.hexCode}
+                        onChange={(e) => handleColorChange(cIdx, "hexCode", e.target.value, "create")}
+                        className="w-20 h-8 px-2 text-xs font-mono bg-white border border-neutral-300 rounded focus:outline-none focus:border-brand-primary"
+                      />
+
+                      {/* Photo Count Tag */}
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600 font-medium">
+                        {photoCount} {photoCount === 1 ? "angle" : "angles"}
+                      </span>
+
+                      {/* Set as active upload target */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedUploadColor(color.name)}
+                        className={`text-[11px] px-2 py-1 rounded transition-colors ${
+                          selectedUploadColor === color.name
+                            ? "bg-brand-primary text-white font-semibold"
+                            : "bg-neutral-100 hover:bg-neutral-200 text-neutral-700"
+                        }`}
+                      >
+                        {selectedUploadColor === color.name ? "✓ Upload Target" : "Select for Upload"}
+                      </button>
+
+                      {/* Remove Color Button */}
+                      {newProductForm.colors.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveColor(cIdx, "create")}
+                          className="p-1 text-neutral-400 hover:text-red-600 rounded transition-colors"
+                          title="Remove color variant"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* ========================================================== */}
+            {/* 2. MULTI-PHOTO UPLOAD & ANGLE SPECIFICATION */}
+            {/* ========================================================== */}
+            <div className="space-y-3 p-3.5 rounded-[8px] bg-neutral-50 border border-neutral-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <div>
+                  <label className="block text-xs font-bold text-neutral-800">
+                    Multi-Angle Product Photos ({newProductForm.images.length})
+                  </label>
+                  <p className="text-[11px] text-neutral-500">
+                    Upload multiple angles (Front, Back, Border Detail, Texture, Model Pose) per color.
+                  </p>
+                </div>
+              </div>
+
+              {/* Upload Controls Bar */}
+              <div className="bg-white p-2.5 rounded-[6px] border border-neutral-200 space-y-2">
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  <div className="flex items-center gap-1.5 flex-1 min-w-[200px]">
+                    <span className="font-semibold text-neutral-700 whitespace-nowrap">Target Color:</span>
+                    <select
+                      value={selectedUploadColor}
+                      onChange={(e) => setSelectedUploadColor(e.target.value)}
+                      className="flex-1 h-8 px-2 bg-neutral-50 border border-neutral-300 rounded text-xs focus:outline-none focus:border-brand-primary"
+                    >
+                      <option value="">General / All Colors</option>
+                      {newProductForm.colors.map((c, i) => (
+                        <option key={i} value={c.name}>
+                          {c.name} ({c.hexCode})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 flex-1 min-w-[180px]">
+                    <span className="font-semibold text-neutral-700 whitespace-nowrap">Angle Preset:</span>
+                    <select
+                      value={selectedAngleLabel}
+                      onChange={(e) => setSelectedAngleLabel(e.target.value)}
+                      className="flex-1 h-8 px-2 bg-neutral-50 border border-neutral-300 rounded text-xs focus:outline-none focus:border-brand-primary"
+                    >
+                      <option value="Front View">Front View</option>
+                      <option value="Back View">Back View</option>
+                      <option value="Side / Border Angle">Side / Border Angle</option>
+                      <option value="Texture / Weave Detail">Texture / Weave Detail</option>
+                      <option value="Model Pose">Model Pose</option>
+                      <option value="Packaging / Folded">Packaging / Folded</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-neutral-100">
+                  {/* File Upload Button (Multiple files enabled) */}
+                  <label className="flex items-center justify-center gap-2 p-2.5 border-2 border-dashed border-neutral-300 rounded-[6px] cursor-pointer hover:border-brand-primary bg-neutral-50/50 hover:bg-neutral-50 transition-colors">
+                    <Upload className="w-4 h-4 text-brand-primary" />
+                    <span className="text-xs font-semibold text-neutral-700">
+                      {isUploadingImage ? "Uploading photos..." : "Upload Photo(s) (Multi-Select)"}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      disabled={isUploadingImage}
+                      onChange={(e) => handleFileUpload(e, "create")}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {/* Direct URL input */}
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="url"
+                      placeholder="Or paste image URL"
+                      value={customImageUrlInput}
+                      onChange={(e) => setCustomImageUrlInput(e.target.value)}
+                      className="flex-1 h-9 px-2.5 text-xs bg-white border border-neutral-300 rounded focus:outline-none focus:border-brand-primary"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAddImageUrl("create")}
+                      className="whitespace-nowrap h-9 text-xs"
+                    >
+                      Add URL
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Multi-Angle Gallery Thumbnails with Angle & Color Editor */}
+              {newProductForm.images.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 pt-1">
+                  {newProductForm.images.map((img, idx) => (
+                    <div
+                      key={idx}
+                      className={`relative flex flex-col rounded-[6px] overflow-hidden border-2 bg-white shadow-xs group ${
+                        img.isPrimary ? "border-brand-primary ring-1 ring-brand-primary" : "border-neutral-200"
+                      }`}
+                    >
+                      {/* Photo Thumbnail */}
+                      <div className="relative aspect-[3/4] w-full bg-neutral-100 overflow-hidden">
+                        <Image
+                          src={img.imageUrl}
+                          alt={img.altText || `Angle ${idx + 1}`}
+                          fill
+                          sizes="150px"
+                          className="object-cover"
+                        />
+
+                        {/* Primary Badge / Toggle */}
+                        <button
+                          type="button"
+                          onClick={() => handleSetPrimaryImage(idx, "create")}
+                          title={img.isPrimary ? "Primary storefront image" : "Click to set as primary"}
+                          className={`absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 ${
+                            img.isPrimary
+                              ? "bg-brand-primary text-white"
+                              : "bg-neutral-900/60 text-neutral-300 hover:bg-neutral-900"
+                          }`}
+                        >
+                          <Star className="w-2.5 h-2.5" />
+                          <span>{img.isPrimary ? "Main" : "Make Main"}</span>
+                        </button>
+
+                        {/* Delete Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(idx, "create")}
+                          title="Remove image"
+                          className="absolute top-1.5 right-1.5 p-1 rounded-full bg-red-600/80 text-white opacity-0 group-hover:opacity-100 hover:bg-red-700 transition-opacity"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+
+                      {/* Angle & Color Metadata Controls */}
+                      <div className="p-1.5 bg-neutral-50 border-t border-neutral-200 space-y-1">
+                        {/* Angle / Alt Text Selector */}
+                        <input
+                          type="text"
+                          placeholder="Angle (e.g. Front View)"
+                          value={img.altText || ""}
+                          onChange={(e) => handleUpdateImageAngle(idx, e.target.value, "create")}
+                          className="w-full h-6 px-1.5 text-[11px] bg-white border border-neutral-300 rounded focus:outline-none focus:border-brand-primary font-medium"
+                        />
+
+                        {/* Color Mapping Selector */}
+                        <select
+                          value={img.colorName || ""}
+                          onChange={(e) => handleUpdateImageColor(idx, e.target.value, "create")}
+                          className="w-full h-6 px-1 text-[10px] bg-white border border-neutral-300 rounded focus:outline-none focus:border-brand-primary font-semibold text-neutral-700"
+                        >
+                          <option value="">General (All Colors)</option>
+                          {newProductForm.colors.map((c, i) => (
+                            <option key={i} value={c.name}>
+                              Color: {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="pt-2 flex justify-end gap-2">
@@ -898,7 +1785,7 @@ function AdminDashboardContent() {
       )}
 
       {/* ================================================================== */}
-      {/* MODAL: EDIT PRODUCT */}
+      {/* MODAL: EDIT PRODUCT (With Multi-Angle Photos & Colors) */}
       {/* ================================================================== */}
       {editingProduct && (
         <Modal
@@ -964,6 +1851,227 @@ function AdminDashboardContent() {
                 value={editingProduct.stockCount}
                 onChange={(e) => setEditingProduct({ ...editingProduct, stockCount: Number(e.target.value) })}
               />
+            </div>
+
+            {/* Colors in Edit Modal */}
+            <div className="p-3.5 rounded-[8px] bg-neutral-50 border border-neutral-200 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="block text-xs font-bold text-neutral-800">
+                    Color Variants ({editingProduct.colors.length})
+                  </label>
+                  <p className="text-[11px] text-neutral-500">Manage color swatches for this product</p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleAddColor("edit")}
+                  className="h-7 text-xs flex items-center gap-1"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>Add Color</span>
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                {editingProduct.colors.map((color, cIdx) => (
+                  <div
+                    key={cIdx}
+                    className="flex flex-wrap items-center gap-2 p-2 bg-white rounded-[6px] border border-neutral-200"
+                  >
+                    <input
+                      type="color"
+                      value={color.hexCode}
+                      onChange={(e) => handleColorChange(cIdx, "hexCode", e.target.value, "edit")}
+                      className="w-7 h-7 p-0 border border-neutral-300 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Color Name"
+                      value={color.name}
+                      onChange={(e) => handleColorChange(cIdx, "name", e.target.value, "edit")}
+                      className="flex-1 min-w-[120px] h-8 px-2 text-xs bg-white border border-neutral-300 rounded font-medium"
+                    />
+                    <input
+                      type="text"
+                      placeholder="#HEX"
+                      value={color.hexCode}
+                      onChange={(e) => handleColorChange(cIdx, "hexCode", e.target.value, "edit")}
+                      className="w-20 h-8 px-2 text-xs font-mono bg-white border border-neutral-300 rounded"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setSelectedUploadColor(color.name)}
+                      className={`text-[11px] px-2 py-1 rounded transition-colors ${
+                        selectedUploadColor === color.name
+                          ? "bg-brand-primary text-white font-semibold"
+                          : "bg-neutral-100 hover:bg-neutral-200 text-neutral-700"
+                      }`}
+                    >
+                      {selectedUploadColor === color.name ? "✓ Upload Target" : "Select for Upload"}
+                    </button>
+                    {editingProduct.colors.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveColor(cIdx, "edit")}
+                        className="p-1 text-neutral-400 hover:text-red-600 rounded"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Photos & Multi-Angle in Edit Modal */}
+            <div className="space-y-3 p-3.5 rounded-[8px] bg-neutral-50 border border-neutral-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="block text-xs font-bold text-neutral-800">
+                    Product Photos ({editingProduct.images.length})
+                  </label>
+                  <p className="text-[11px] text-neutral-500">Upload or adjust angle photos</p>
+                </div>
+              </div>
+
+              {/* Upload Controls for Edit */}
+              <div className="bg-white p-2.5 rounded-[6px] border border-neutral-200 space-y-2">
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  <div className="flex items-center gap-1.5 flex-1 min-w-[180px]">
+                    <span className="font-semibold text-neutral-700 whitespace-nowrap">Target Color:</span>
+                    <select
+                      value={selectedUploadColor}
+                      onChange={(e) => setSelectedUploadColor(e.target.value)}
+                      className="flex-1 h-8 px-2 bg-neutral-50 border border-neutral-300 rounded text-xs"
+                    >
+                      <option value="">General / All Colors</option>
+                      {editingProduct.colors.map((c, i) => (
+                        <option key={i} value={c.name}>
+                          {c.name} ({c.hexCode})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 flex-1 min-w-[160px]">
+                    <span className="font-semibold text-neutral-700 whitespace-nowrap">Angle Preset:</span>
+                    <select
+                      value={selectedAngleLabel}
+                      onChange={(e) => setSelectedAngleLabel(e.target.value)}
+                      className="flex-1 h-8 px-2 bg-neutral-50 border border-neutral-300 rounded text-xs"
+                    >
+                      <option value="Front View">Front View</option>
+                      <option value="Back View">Back View</option>
+                      <option value="Side / Border Angle">Side / Border Angle</option>
+                      <option value="Texture / Weave Detail">Texture / Weave Detail</option>
+                      <option value="Model Pose">Model Pose</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-neutral-100">
+                  <label className="flex items-center justify-center gap-2 p-2 border-2 border-dashed border-neutral-300 rounded-[6px] cursor-pointer hover:border-brand-primary bg-neutral-50/50 hover:bg-neutral-50 transition-colors">
+                    <Upload className="w-4 h-4 text-brand-primary" />
+                    <span className="text-xs font-semibold text-neutral-700">
+                      {isUploadingImage ? "Uploading..." : "Upload Photo(s) (Multi-Select)"}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      disabled={isUploadingImage}
+                      onChange={(e) => handleFileUpload(e, "edit")}
+                      className="hidden"
+                    />
+                  </label>
+
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="url"
+                      placeholder="Paste image URL"
+                      value={customImageUrlInput}
+                      onChange={(e) => setCustomImageUrlInput(e.target.value)}
+                      className="flex-1 h-8 px-2.5 text-xs bg-white border border-neutral-300 rounded"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAddImageUrl("edit")}
+                      className="whitespace-nowrap h-8 text-xs"
+                    >
+                      Add URL
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Edit Gallery Cards */}
+              {editingProduct.images.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 pt-1">
+                  {editingProduct.images.map((img, idx) => (
+                    <div
+                      key={idx}
+                      className={`relative flex flex-col rounded-[6px] overflow-hidden border-2 bg-white shadow-xs group ${
+                        img.isPrimary ? "border-brand-primary ring-1 ring-brand-primary" : "border-neutral-200"
+                      }`}
+                    >
+                      <div className="relative aspect-[3/4] w-full bg-neutral-100 overflow-hidden">
+                        <Image
+                          src={img.imageUrl}
+                          alt={img.altText || `Angle ${idx + 1}`}
+                          fill
+                          sizes="150px"
+                          className="object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleSetPrimaryImage(idx, "edit")}
+                          className={`absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 ${
+                            img.isPrimary
+                              ? "bg-brand-primary text-white"
+                              : "bg-neutral-900/60 text-neutral-300 hover:bg-neutral-900"
+                          }`}
+                        >
+                          <Star className="w-2.5 h-2.5" />
+                          <span>{img.isPrimary ? "Main" : "Make Main"}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(idx, "edit")}
+                          className="absolute top-1.5 right-1.5 p-1 rounded-full bg-red-600/80 text-white opacity-0 group-hover:opacity-100 hover:bg-red-700 transition-opacity"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+
+                      <div className="p-1.5 bg-neutral-50 border-t border-neutral-200 space-y-1">
+                        <input
+                          type="text"
+                          placeholder="Angle Label"
+                          value={img.altText || ""}
+                          onChange={(e) => handleUpdateImageAngle(idx, e.target.value, "edit")}
+                          className="w-full h-6 px-1.5 text-[11px] bg-white border border-neutral-300 rounded font-medium"
+                        />
+                        <select
+                          value={img.colorName || ""}
+                          onChange={(e) => handleUpdateImageColor(idx, e.target.value, "edit")}
+                          className="w-full h-6 px-1 text-[10px] bg-white border border-neutral-300 rounded font-semibold text-neutral-700"
+                        >
+                          <option value="">General (All Colors)</option>
+                          {editingProduct.colors.map((c, i) => (
+                            <option key={i} value={c.name}>
+                              Color: {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="pt-2 flex justify-end gap-2">

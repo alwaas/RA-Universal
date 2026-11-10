@@ -25,6 +25,29 @@ export interface ProductQueryFilters {
 // In-memory product state for consistent demo CRUD operations when PostgreSQL is offline
 const inMemoryProducts: Product[] = JSON.parse(JSON.stringify(seedProductsData));
 
+/**
+ * Checks whether fallback to in-memory demo catalogue is permitted.
+ * In production, fallback is disabled by default to prevent serving fake catalogue data during outages.
+ */
+export function isDemoFallbackAllowed(): boolean {
+  if (process.env.ENABLE_DEMO_FALLBACK === "true") {
+    return true;
+  }
+  if (process.env.ENABLE_DEMO_FALLBACK === "false") {
+    return false;
+  }
+  if (process.env.NODE_ENV !== "production") {
+    return true;
+  }
+  // When no DATABASE_URL is configured (e.g. local preview/offline evaluation without a DB),
+  // permit the demo catalogue so the user can test the application.
+  // In real production, DATABASE_URL is always configured; if it fails, fallback is strictly blocked.
+  if (!process.env.DATABASE_URL) {
+    return true;
+  }
+  return false;
+}
+
 export class ProductService {
   /**
    * Generates a URL-friendly slug from title.
@@ -118,6 +141,7 @@ export class ProductService {
               id: img.id,
               imageUrl: img.imageUrl,
               altText: img.altText || undefined,
+              colorName: img.colorName || undefined,
               isPrimary: img.isPrimary,
               displayOrder: img.displayOrder,
             })),
@@ -125,6 +149,7 @@ export class ProductService {
               id: c.id,
               name: c.name,
               hexCode: c.hexCode,
+              imageUrl: c.imageUrl || undefined,
               inStock: c.inStock,
             })),
             badge: primaryTag
@@ -141,12 +166,18 @@ export class ProductService {
         });
 
         return { products: formatted, total: formatted.length };
-      } catch (err) {
-        console.warn("Database query failed, falling back to seed catalogue:", err);
+      } catch (err: any) {
+        console.warn("Database query failed:", err?.message || err);
+        if (!isDemoFallbackAllowed()) {
+          throw new Error("DATABASE_UNAVAILABLE: Storefront database is currently offline or unreachable.");
+        }
       }
     }
 
-    // Graceful fallback to in-memory catalogue
+    // Graceful fallback to in-memory catalogue only when allowed
+    if (!isDemoFallbackAllowed()) {
+      throw new Error("DATABASE_UNAVAILABLE: Production database connection is offline. Storefront is in maintenance mode.");
+    }
     let items = [...inMemoryProducts];
     if (filters.status) {
       items = items.filter((p) => p.status === filters.status);
@@ -216,6 +247,7 @@ export class ProductService {
               id: img.id,
               imageUrl: img.imageUrl,
               altText: img.altText || undefined,
+              colorName: img.colorName || undefined,
               isPrimary: img.isPrimary,
               displayOrder: img.displayOrder,
             })),
@@ -223,6 +255,7 @@ export class ProductService {
               id: c.id,
               name: c.name,
               hexCode: c.hexCode,
+              imageUrl: c.imageUrl || undefined,
               inStock: c.inStock,
             })),
             badge: primaryTag
@@ -237,9 +270,16 @@ export class ProductService {
             updatedAt: p.updatedAt.toISOString(),
           };
         }
-      } catch (err) {
-        console.warn("Database lookup by slug failed:", err);
+      } catch (err: any) {
+        console.warn("Database lookup by slug failed:", err?.message || err);
+        if (!isDemoFallbackAllowed()) {
+          throw new Error("DATABASE_UNAVAILABLE: Storefront database is currently offline or unreachable.");
+        }
       }
+    }
+
+    if (!isDemoFallbackAllowed()) {
+      return null;
     }
 
     const fallback = inMemoryProducts.find((p) => p.slug === slug);
@@ -280,6 +320,7 @@ export class ProductService {
               productId: newProduct.id,
               imageUrl: img.imageUrl,
               altText: img.altText || input.title,
+              colorName: img.colorName || null,
               displayOrder: img.displayOrder ?? idx,
               isPrimary: img.isPrimary ?? idx === 0,
             }))
@@ -293,6 +334,7 @@ export class ProductService {
               productId: newProduct.id,
               name: c.name,
               hexCode: c.hexCode,
+              imageUrl: c.imageUrl || null,
               inStock: c.inStock ?? true,
             }))
           );
@@ -310,6 +352,10 @@ export class ProductService {
         if (!created) throw new Error("Product created but could not be re-queried.");
         return created;
       });
+    }
+
+    if (!isDemoFallbackAllowed()) {
+      throw new Error("DATABASE_UNAVAILABLE: Cannot create product without active database connection in production.");
     }
 
     // In-memory demo fallback
@@ -333,12 +379,15 @@ export class ProductService {
         id: `img-${Date.now()}-${i}`,
         imageUrl: img.imageUrl,
         altText: img.altText,
+        colorName: img.colorName || null,
         isPrimary: img.isPrimary || i === 0,
+        displayOrder: img.displayOrder ?? i,
       })),
       colors: input.colors.map((c, i) => ({
         id: `col-${Date.now()}-${i}`,
         name: c.name,
         hexCode: c.hexCode,
+        imageUrl: c.imageUrl || null,
         inStock: c.inStock ?? true,
       })),
       badge: null,
@@ -355,20 +404,56 @@ export class ProductService {
    */
   static async updateProduct(id: string, input: ProductUpdateInput): Promise<boolean> {
     if (db) {
-      const updateData: any = {};
-      if (input.title) updateData.title = input.title;
-      if (input.slug) updateData.slug = input.slug;
-      if (input.description) updateData.description = input.description;
-      if (input.category) updateData.category = input.category;
-      if (input.fabric) updateData.fabric = input.fabric;
-      if (input.mrp) updateData.mrp = input.mrp.toString();
-      if (input.sellingPrice) updateData.sellingPrice = input.sellingPrice.toString();
-      if (input.status) updateData.status = input.status;
-      if (input.stockCount !== undefined) updateData.stockCount = input.stockCount;
-      updateData.updatedAt = new Date();
+      return await db.transaction(async (tx) => {
+        const updateData: any = {};
+        if (input.title) updateData.title = input.title;
+        if (input.slug) updateData.slug = input.slug;
+        if (input.description) updateData.description = input.description;
+        if (input.category) updateData.category = input.category;
+        if (input.fabric) updateData.fabric = input.fabric;
+        if (input.mrp) updateData.mrp = input.mrp.toString();
+        if (input.sellingPrice) updateData.sellingPrice = input.sellingPrice.toString();
+        if (input.status) updateData.status = input.status;
+        if (input.stockCount !== undefined) updateData.stockCount = input.stockCount;
+        updateData.updatedAt = new Date();
 
-      await db.update(products).set(updateData).where(eq(products.id, id));
-      return true;
+        await tx.update(products).set(updateData).where(eq(products.id, id));
+
+        // Update Images if provided
+        if (input.images && input.images.length > 0) {
+          await tx.delete(productImages).where(eq(productImages.productId, id));
+          await tx.insert(productImages).values(
+            input.images.map((img, idx) => ({
+              productId: id,
+              imageUrl: img.imageUrl,
+              altText: img.altText,
+              colorName: img.colorName || null,
+              displayOrder: img.displayOrder ?? idx,
+              isPrimary: img.isPrimary ?? idx === 0,
+            }))
+          );
+        }
+
+        // Update Colors if provided
+        if (input.colors && input.colors.length > 0) {
+          await tx.delete(productColors).where(eq(productColors.productId, id));
+          await tx.insert(productColors).values(
+            input.colors.map((c) => ({
+              productId: id,
+              name: c.name,
+              hexCode: c.hexCode,
+              imageUrl: c.imageUrl || null,
+              inStock: c.inStock ?? true,
+            }))
+          );
+        }
+
+        return true;
+      });
+    }
+
+    if (!isDemoFallbackAllowed()) {
+      throw new Error("DATABASE_UNAVAILABLE: Cannot update product without active database connection in production.");
     }
 
     // Update in-memory fallback
@@ -389,6 +474,25 @@ export class ProductService {
             ? Math.round(((existing.mrp - existing.sellingPrice) / existing.mrp) * 100)
             : 0;
       }
+      if (input.images && input.images.length > 0) {
+        existing.images = input.images.map((img, i) => ({
+          id: `img-${Date.now()}-${i}`,
+          imageUrl: img.imageUrl,
+          altText: img.altText,
+          colorName: img.colorName || null,
+          isPrimary: img.isPrimary || i === 0,
+          displayOrder: img.displayOrder ?? i,
+        }));
+      }
+      if (input.colors && input.colors.length > 0) {
+        existing.colors = input.colors.map((c, i) => ({
+          id: `col-${Date.now()}-${i}`,
+          name: c.name,
+          hexCode: c.hexCode,
+          imageUrl: c.imageUrl || null,
+          inStock: c.inStock ?? true,
+        }));
+      }
       existing.updatedAt = new Date().toISOString();
     }
     return true;
@@ -401,6 +505,10 @@ export class ProductService {
     if (db) {
       await db.delete(products).where(eq(products.id, id));
       return true;
+    }
+
+    if (!isDemoFallbackAllowed()) {
+      throw new Error("DATABASE_UNAVAILABLE: Cannot delete product without active database connection in production.");
     }
 
     const idx = inMemoryProducts.findIndex((p) => p.id === id);

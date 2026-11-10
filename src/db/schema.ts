@@ -104,12 +104,14 @@ export const productImages = pgTable(
       .notNull(),
     imageUrl: text("image_url").notNull(),
     altText: varchar("alt_text", { length: 255 }),
+    colorName: varchar("color_name", { length: 50 }),
     displayOrder: integer("display_order").default(0).notNull(),
     isPrimary: boolean("is_primary").default(false).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => ({
     productPrimaryIdx: index("idx_product_images_product_primary").on(table.productId, table.isPrimary),
+    productColorIdx: index("idx_product_images_color").on(table.productId, table.colorName),
   })
 );
 
@@ -125,6 +127,7 @@ export const productColors = pgTable(
       .notNull(),
     name: varchar("name", { length: 50 }).notNull(),
     hexCode: varchar("hex_code", { length: 10 }).notNull(),
+    imageUrl: text("image_url"),
     inStock: boolean("in_stock").default(true).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },

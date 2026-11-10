@@ -1,0 +1,2 @@
+ALTER TABLE "product_images" ADD COLUMN "color_name" varchar(50);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_product_images_color" ON "product_images" USING btree ("product_id","color_name");

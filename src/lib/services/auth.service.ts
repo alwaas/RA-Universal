@@ -127,12 +127,40 @@ export class AuthService {
    * Validates customer or admin credentials.
    */
   static async login(identifier: string, password: string): Promise<{ user: SessionUser; token: string }> {
+    // 1. Check Database first if configured and connected
+    if (db) {
+      const user = await db.query.users.findFirst({
+        where: or(eq(users.phone, identifier), eq(users.email, identifier)),
+      });
+
+      if (user) {
+        const isValid = await this.verifyPassword(password, user.passwordHash);
+        if (!isValid) {
+          throw new Error("Invalid credentials. Please verify your phone/email and password.");
+        }
+
+        const sessionUser: SessionUser = {
+          userId: user.id,
+          role: user.role as SessionUser["role"],
+          fullName: user.fullName,
+          phone: user.phone,
+          email: user.email || undefined,
+        };
+
+        const token = await createSessionToken(sessionUser);
+        return { user: sessionUser, token };
+      }
+    }
+
+    // 2. Check default administrative credentials (only for initial bootstrap or dev/demo fallback)
     const adminPhone = process.env.ADMIN_DEFAULT_PHONE || "9999999999";
     const adminEmail = process.env.ADMIN_EMAIL || "admin@rauniversal.in";
-    const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD || "SuperSecureAdminPassword2026!";
+    const adminPassword =
+      process.env.ADMIN_DEFAULT_PASSWORD ||
+      (process.env.NODE_ENV !== "production" ? "SuperSecureAdminPassword2026!" : undefined);
 
-    // 1. Check default administrative credentials (phone or email)
     if (
+      adminPassword &&
       (identifier === adminPhone || identifier === adminEmail) &&
       password === adminPassword
     ) {
@@ -145,33 +173,6 @@ export class AuthService {
       };
       const token = await createSessionToken(adminUser);
       return { user: adminUser, token };
-    }
-
-    // 2. Check Database if available
-    if (db) {
-      const user = await db.query.users.findFirst({
-        where: or(eq(users.phone, identifier), eq(users.email, identifier)),
-      });
-
-      if (!user) {
-        throw new Error("Invalid credentials. Please verify your phone/email and password.");
-      }
-
-      const isValid = await this.verifyPassword(password, user.passwordHash);
-      if (!isValid) {
-        throw new Error("Invalid credentials. Please verify your phone/email and password.");
-      }
-
-      const sessionUser: SessionUser = {
-        userId: user.id,
-        role: user.role as SessionUser["role"],
-        fullName: user.fullName,
-        phone: user.phone,
-        email: user.email || undefined,
-      };
-
-      const token = await createSessionToken(sessionUser);
-      return { user: sessionUser, token };
     }
 
     // 3. Check Demo In-Memory Users
@@ -320,5 +321,56 @@ export class AuthService {
     }
 
     return null;
+  }
+
+  /**
+   * Rotates an administrator's or customer's password.
+   */
+  static async rotatePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<boolean> {
+    if (newPassword.length < 8) {
+      throw new Error("New password must be at least 8 characters long.");
+    }
+
+    if (db) {
+      const user = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+      });
+
+      if (!user) {
+        throw new Error("User record not found in database.");
+      }
+
+      const isValid = await this.verifyPassword(currentPassword, user.passwordHash);
+      if (!isValid) {
+        throw new Error("Current password verification failed.");
+      }
+
+      const newHash = await this.hashPassword(newPassword);
+      await db
+        .update(users)
+        .set({
+          passwordHash: newHash,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId));
+
+      return true;
+    }
+
+    const inMem = inMemoryUsers.get(userId);
+    if (inMem) {
+      const isValid = await this.verifyPassword(currentPassword, inMem.passwordHash);
+      if (!isValid) {
+        throw new Error("Current password verification failed.");
+      }
+      inMem.passwordHash = await this.hashPassword(newPassword);
+      return true;
+    }
+
+    return true;
   }
 }

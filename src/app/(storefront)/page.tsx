@@ -1,14 +1,20 @@
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, AlertCircle } from "lucide-react";
 import { ProductCard } from "@/components/product/ProductCard";
-import demoProductsData from "@/data/seedProducts.json";
+import { ProductService } from "@/lib/services/product.service";
 import type { Product } from "@/types";
 
-const demoProducts = demoProductsData as unknown as Product[];
+export default async function HomePage() {
+  let trendingProducts: Product[] = [];
+  let loadError: string | null = null;
 
-export default function HomePage() {
-  const trendingProducts = demoProducts.slice(0, 6);
+  try {
+    const result = await ProductService.getProducts({ limit: 8, status: "active" });
+    trendingProducts = result.products.slice(0, 8);
+  } catch (err: any) {
+    loadError = err?.message || "Storefront catalogue is temporarily in maintenance mode.";
+  }
 
   return (
     <div className="space-y-12 sm:space-y-16 pb-16">
@@ -114,11 +120,19 @@ export default function HomePage() {
         </div>
 
         {/* Responsive Grid: 2 columns on mobile, 3 on tablet, 4 on desktop */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
-          {trendingProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {loadError && trendingProducts.length === 0 ? (
+          <div className="py-12 px-4 text-center bg-neutral-100 rounded-[8px] border border-neutral-300">
+            <AlertCircle className="w-8 h-8 text-neutral-500 mx-auto mb-2" />
+            <p className="text-sm font-semibold text-neutral-700">Catalogue Updating</p>
+            <p className="text-xs text-neutral-500 mt-1">{loadError}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+            {trendingProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* B2B Wholesale Banner */}

@@ -33,6 +33,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     product.images[0]?.imageUrl ||
     "https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=800";
 
+  const [activeImage, setActiveImage] = useState<string>(
+    product.colors[0]?.imageUrl || primaryImage
+  );
+
+  const handleSelectColor = (color: ProductColor) => {
+    setSelectedColor(color);
+    if (color.imageUrl) {
+      setActiveImage(color.imageUrl);
+    }
+  };
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -65,7 +76,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       {/* Product Image Link */}
       <Link href={`/product/${product.slug}`} className="block relative w-full aspect-[3/4] bg-neutral-100 overflow-hidden">
         <Image
-          src={primaryImage}
+          src={activeImage}
           alt={product.title}
           fill
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -88,7 +99,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <ColorSelector
               colors={product.colors}
               selectedColorId={selectedColor?.id}
-              onSelectColor={setSelectedColor}
+              onSelectColor={handleSelectColor}
             />
           </div>
 

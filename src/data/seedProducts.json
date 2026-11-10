@@ -18,16 +18,53 @@
       "badgeColor": "yellow"
     },
     "colors": [
-      { "id": "c-1", "name": "Traditional Red", "hexCode": "#DC2626" },
-      { "id": "c-2", "name": "Forest Green", "hexCode": "#15803D" },
-      { "id": "c-3", "name": "Indigo Blue", "hexCode": "#1D4ED8" }
+      {
+        "id": "c-1",
+        "name": "Traditional Red",
+        "hexCode": "#DC2626",
+        "imageUrl": "https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=800&auto=format&fit=crop&q=80"
+      },
+      {
+        "id": "c-2",
+        "name": "Forest Green",
+        "hexCode": "#15803D",
+        "imageUrl": "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&auto=format&fit=crop&q=80"
+      },
+      {
+        "id": "c-3",
+        "name": "Indigo Blue",
+        "hexCode": "#1D4ED8",
+        "imageUrl": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80"
+      }
     ],
     "images": [
       {
         "id": "img-1",
         "imageUrl": "https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=800&auto=format&fit=crop&q=80",
-        "altText": "Classic Bengal Cotton Gamcha - Heritage Red Check",
+        "altText": "Traditional Red Check Gamcha - Front View",
+        "colorName": "Traditional Red",
         "isPrimary": true
+      },
+      {
+        "id": "img-1-texture",
+        "imageUrl": "https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=800&auto=format&fit=crop&q=80",
+        "altText": "Traditional Red Check Gamcha - Close-up Weave Detail",
+        "colorName": "Traditional Red",
+        "isPrimary": false
+      },
+      {
+        "id": "img-1-green",
+        "imageUrl": "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&auto=format&fit=crop&q=80",
+        "altText": "Forest Green Check Gamcha Variant",
+        "colorName": "Forest Green",
+        "isPrimary": false
+      },
+      {
+        "id": "img-1-blue",
+        "imageUrl": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80",
+        "altText": "Indigo Blue Check Gamcha Variant",
+        "colorName": "Indigo Blue",
+        "isPrimary": false
       }
     ],
     "createdAt": "2026-01-01T00:00:00Z",
@@ -52,15 +89,40 @@
       "badgeColor": "orange"
     },
     "colors": [
-      { "id": "c-4", "name": "Maroon & Black", "hexCode": "#800000" },
-      { "id": "c-5", "name": "Mustard Ochre", "hexCode": "#CA8A04" }
+      {
+        "id": "c-4",
+        "name": "Maroon & Black",
+        "hexCode": "#800000",
+        "imageUrl": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80"
+      },
+      {
+        "id": "c-5",
+        "name": "Mustard Ochre",
+        "hexCode": "#CA8A04",
+        "imageUrl": "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&auto=format&fit=crop&q=80"
+      }
     ],
     "images": [
       {
         "id": "img-2",
         "imageUrl": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80",
-        "altText": "Sambalpuri Handloom Pure Cotton Men's Gamcha",
+        "altText": "Sambalpuri Handloom Maroon - Front View",
+        "colorName": "Maroon & Black",
         "isPrimary": true
+      },
+      {
+        "id": "img-2-detail",
+        "imageUrl": "https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=800&auto=format&fit=crop&q=80",
+        "altText": "Sambalpuri Ikat Border Detail",
+        "colorName": "Maroon & Black",
+        "isPrimary": false
+      },
+      {
+        "id": "img-2-ochre",
+        "imageUrl": "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&auto=format&fit=crop&q=80",
+        "altText": "Sambalpuri Mustard Ochre Variant",
+        "colorName": "Mustard Ochre",
+        "isPrimary": false
       }
     ],
     "createdAt": "2026-01-01T00:00:00Z",
@@ -85,14 +147,25 @@
       "badgeColor": "red"
     },
     "colors": [
-      { "id": "c-6", "name": "White with Red Flora", "hexCode": "#B91C1C" }
+      {
+        "id": "c-6",
+        "name": "White with Red Flora",
+        "hexCode": "#B91C1C",
+        "imageUrl": "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=800&auto=format&fit=crop&q=80"
+      }
     ],
     "images": [
       {
         "id": "img-3",
         "imageUrl": "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=800&auto=format&fit=crop&q=80",
-        "altText": "Assam Traditional Phulam Gamosa",
+        "altText": "Assam Phulam Gamosa - Traditional Floral View",
         "isPrimary": true
+      },
+      {
+        "id": "img-3-weave",
+        "imageUrl": "https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=800&auto=format&fit=crop&q=80",
+        "altText": "Assam Handloom Cotton Weave",
+        "isPrimary": false
       }
     ],
     "createdAt": "2026-01-01T00:00:00Z",
@@ -117,16 +190,49 @@
       "badgeColor": "yellow"
     },
     "colors": [
-      { "id": "c-7", "name": "Peacock Blue", "hexCode": "#0284C7" },
-      { "id": "c-8", "name": "Rani Pink", "hexCode": "#BE185D" },
-      { "id": "c-9", "name": "Emerald Green", "hexCode": "#047857" }
+      {
+        "id": "c-7",
+        "name": "Peacock Blue",
+        "hexCode": "#0284C7",
+        "imageUrl": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&auto=format&fit=crop&q=80"
+      },
+      {
+        "id": "c-8",
+        "name": "Rani Pink",
+        "hexCode": "#BE185D",
+        "imageUrl": "https://images.unsplash.com/photo-1610030469668-93510cb67655?w=800&auto=format&fit=crop&q=80"
+      },
+      {
+        "id": "c-9",
+        "name": "Emerald Green",
+        "hexCode": "#047857",
+        "imageUrl": "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800&auto=format&fit=crop&q=80"
+      }
     ],
     "images": [
       {
-        "id": "img-4",
+        "id": "img-4-blue",
         "imageUrl": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&auto=format&fit=crop&q=80",
-        "altText": "Chanderi Silk Golden Zari Border Women's Dupatta",
+        "altText": "Chanderi Silk Peacock Blue Dupatta",
         "isPrimary": true
+      },
+      {
+        "id": "img-4-pink",
+        "imageUrl": "https://images.unsplash.com/photo-1610030469668-93510cb67655?w=800&auto=format&fit=crop&q=80",
+        "altText": "Chanderi Silk Rani Pink Dupatta",
+        "isPrimary": false
+      },
+      {
+        "id": "img-4-green",
+        "imageUrl": "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800&auto=format&fit=crop&q=80",
+        "altText": "Chanderi Silk Emerald Green Dupatta",
+        "isPrimary": false
+      },
+      {
+        "id": "img-4-zari",
+        "imageUrl": "https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=800&auto=format&fit=crop&q=80",
+        "altText": "Chanderi Golden Zari Booti Detail",
+        "isPrimary": false
       }
     ],
     "createdAt": "2026-01-01T00:00:00Z",
@@ -151,15 +257,37 @@
       "badgeColor": "red"
     },
     "colors": [
-      { "id": "c-10", "name": "Indigo Navy", "hexCode": "#1E3A8A" },
-      { "id": "c-11", "name": "Earthy Ochre", "hexCode": "#B45309" }
+      {
+        "id": "c-10",
+        "name": "Indigo Navy",
+        "hexCode": "#1E3A8A",
+        "imageUrl": "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800&auto=format&fit=crop&q=80"
+      },
+      {
+        "id": "c-11",
+        "name": "Earthy Ochre",
+        "hexCode": "#B45309",
+        "imageUrl": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&auto=format&fit=crop&q=80"
+      }
     ],
     "images": [
       {
-        "id": "img-5",
+        "id": "img-5-indigo",
         "imageUrl": "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800&auto=format&fit=crop&q=80",
-        "altText": "Handcrafted Kalamkari Natural Dye Cotton Dupatta",
+        "altText": "Kalamkari Indigo Navy Dupatta",
         "isPrimary": true
+      },
+      {
+        "id": "img-5-ochre",
+        "imageUrl": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&auto=format&fit=crop&q=80",
+        "altText": "Kalamkari Earthy Ochre Dupatta",
+        "isPrimary": false
+      },
+      {
+        "id": "img-5-print",
+        "imageUrl": "https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=800&auto=format&fit=crop&q=80",
+        "altText": "Kalamkari Handblock Print Details",
+        "isPrimary": false
       }
     ],
     "createdAt": "2026-01-01T00:00:00Z",
@@ -184,15 +312,37 @@
       "badgeColor": "orange"
     },
     "colors": [
-      { "id": "c-12", "name": "Festive Red", "hexCode": "#DC2626" },
-      { "id": "c-13", "name": "Basanti Yellow", "hexCode": "#EAB308" }
+      {
+        "id": "c-12",
+        "name": "Festive Red",
+        "hexCode": "#DC2626",
+        "imageUrl": "https://images.unsplash.com/photo-1610030469668-93510cb67655?w=800&auto=format&fit=crop&q=80"
+      },
+      {
+        "id": "c-13",
+        "name": "Basanti Yellow",
+        "hexCode": "#EAB308",
+        "imageUrl": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&auto=format&fit=crop&q=80"
+      }
     ],
     "images": [
       {
-        "id": "img-6",
+        "id": "img-6-red",
         "imageUrl": "https://images.unsplash.com/photo-1610030469668-93510cb67655?w=800&auto=format&fit=crop&q=80",
-        "altText": "Amritsari Phulkari Embroidered Festive Dupatta",
+        "altText": "Phulkari Festive Red Dupatta",
         "isPrimary": true
+      },
+      {
+        "id": "img-6-yellow",
+        "imageUrl": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&auto=format&fit=crop&q=80",
+        "altText": "Phulkari Basanti Yellow Dupatta",
+        "isPrimary": false
+      },
+      {
+        "id": "img-6-embroidery",
+        "imageUrl": "https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=800&auto=format&fit=crop&q=80",
+        "altText": "Phulkari Silk Thread Embroidery Detail",
+        "isPrimary": false
       }
     ],
     "createdAt": "2026-01-01T00:00:00Z",
@@ -217,7 +367,12 @@
       "badgeColor": "gray"
     },
     "colors": [
-      { "id": "c-14", "name": "Natural Indigo", "hexCode": "#1E3A8A" }
+      {
+        "id": "c-14",
+        "name": "Natural Indigo",
+        "hexCode": "#1E3A8A",
+        "imageUrl": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80"
+      }
     ],
     "images": [
       {
@@ -225,6 +380,12 @@
         "imageUrl": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80",
         "altText": "Hand-Dyed Indigo Check Handloom Gamcha",
         "isPrimary": true
+      },
+      {
+        "id": "img-7-weave",
+        "imageUrl": "https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=800&auto=format&fit=crop&q=80",
+        "altText": "Indigo Cotton Weave Texture",
+        "isPrimary": false
       }
     ],
     "createdAt": "2026-01-01T00:00:00Z",
@@ -249,7 +410,12 @@
       "badgeColor": "gray"
     },
     "colors": [
-      { "id": "c-15", "name": "Dual Red & Yellow", "hexCode": "#DC2626" }
+      {
+        "id": "c-15",
+        "name": "Dual Red & Yellow",
+        "hexCode": "#DC2626",
+        "imageUrl": "https://images.unsplash.com/photo-1610030469668-93510cb67655?w=800&auto=format&fit=crop&q=80"
+      }
     ],
     "images": [
       {
@@ -257,6 +423,12 @@
         "imageUrl": "https://images.unsplash.com/photo-1610030469668-93510cb67655?w=800&auto=format&fit=crop&q=80",
         "altText": "Bandhani Tie & Dye Jaipuri Georgette Dupatta",
         "isPrimary": true
+      },
+      {
+        "id": "img-8-knots",
+        "imageUrl": "https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=800&auto=format&fit=crop&q=80",
+        "altText": "Rai Bandhej Knot Details",
+        "isPrimary": false
       }
     ],
     "createdAt": "2026-01-01T00:00:00Z",

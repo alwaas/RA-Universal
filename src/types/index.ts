@@ -10,6 +10,7 @@ export interface ProductColor {
   id: string;
   name: string;
   hexCode: string;
+  imageUrl?: string | null;
   inStock?: boolean;
 }
 
@@ -24,6 +25,7 @@ export interface ProductImage {
   id: string;
   imageUrl: string;
   altText?: string;
+  colorName?: string | null;
   isPrimary: boolean;
   displayOrder?: number;
 }

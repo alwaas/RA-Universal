@@ -1,21 +1,44 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { ProductCard } from "@/components/product/ProductCard";
 import { Button } from "@/components/ui/Button";
-import demoProductsData from "@/data/seedProducts.json";
-import type { Product, ProductCategory } from "@/types";
-import { SlidersHorizontal, RefreshCcw } from "lucide-react";
-
-const allProducts = demoProductsData as unknown as Product[];
+import type { Product } from "@/types";
+import { SlidersHorizontal, RefreshCcw, AlertCircle, ShoppingBag } from "lucide-react";
 
 export default function ShopPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedBadge, setSelectedBadge] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("featured");
 
+  const loadProducts = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const res = await fetch("/api/products?limit=50");
+      const data = await res.json();
+      if (res.ok && data.success && Array.isArray(data.data)) {
+        setProducts(data.data);
+      } else {
+        setError(data.error?.message || "Failed to load catalogue. Database service may be undergoing maintenance.");
+      }
+    } catch (err: any) {
+      setError(err?.message || "Failed to connect to catalogue service.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
   const filteredProducts = useMemo(() => {
-    return allProducts
+    return products
       .filter((p) => {
         if (selectedCategory !== "all" && p.category !== selectedCategory) {
           return false;
@@ -31,7 +54,7 @@ export default function ShopPage() {
         if (sortBy === "discount") return b.discountPercentage - a.discountPercentage;
         return 0; // 'featured' or default
       });
-  }, [selectedCategory, selectedBadge, sortBy]);
+  }, [products, selectedCategory, selectedBadge, sortBy]);
 
   const resetFilters = () => {
     setSelectedCategory("all");
@@ -103,9 +126,9 @@ export default function ShopPage() {
             id="sort-select"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="h-9 px-2.5 bg-white border border-neutral-300 rounded-[6px] text-xs sm:text-sm font-medium text-neutral-800 focus:outline-none focus:ring-1 focus:ring-brand-primary"
+            className="h-8 px-2.5 bg-white border border-neutral-300 rounded-[6px] text-xs font-medium text-neutral-800 focus:outline-none focus:border-brand-primary"
           >
-            <option value="featured">Featured / Newest</option>
+            <option value="featured">Featured Weaves</option>
             <option value="price-low">Price: Low to High</option>
             <option value="price-high">Price: High to Low</option>
             <option value="discount">Highest Discount</option>
@@ -113,25 +136,63 @@ export default function ShopPage() {
         </div>
       </div>
 
-      {/* Product Grid or Empty State */}
-      {filteredProducts.length === 0 ? (
-        <div className="bg-white border border-neutral-300 rounded-[12px] p-12 text-center space-y-3">
-          <div className="w-16 h-16 rounded-full bg-neutral-100 text-neutral-400 flex items-center justify-center mx-auto">
-            <RefreshCcw className="w-8 h-8" />
-          </div>
-          <h3 className="font-serif text-lg font-bold text-neutral-900">
-            No matching handloom products found
-          </h3>
-          <p className="text-xs sm:text-sm text-neutral-500 max-w-sm mx-auto">
-            We couldn&apos;t find any items matching your selected criteria. Try resetting your filters.
-          </p>
-          <div className="pt-2">
-            <Button variant="primary" size="md" onClick={resetFilters}>
-              Clear All Filters
-            </Button>
-          </div>
+      {/* 1. Loading State */}
+      {isLoading && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <div key={i} className="bg-white border border-neutral-200 rounded-[6px] p-3 space-y-3 animate-pulse">
+              <div className="aspect-[3/4] bg-neutral-200 rounded" />
+              <div className="h-4 bg-neutral-200 rounded w-3/4" />
+              <div className="h-4 bg-neutral-200 rounded w-1/2" />
+              <div className="h-8 bg-neutral-200 rounded w-full" />
+            </div>
+          ))}
         </div>
-      ) : (
+      )}
+
+      {/* 2. Error State / Maintenance Mode */}
+      {!isLoading && error && (
+        <div className="py-12 px-4 text-center max-w-lg mx-auto bg-red-50 border border-red-200 rounded-[8px] space-y-3">
+          <AlertCircle className="w-8 h-8 text-red-600 mx-auto" />
+          <h2 className="font-serif text-lg font-bold text-neutral-900">
+            Catalogue Temporarily Unavailable
+          </h2>
+          <p className="text-xs text-neutral-600">
+            {error}
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadProducts}
+            className="mt-2 inline-flex items-center gap-1.5"
+          >
+            <RefreshCcw className="w-3.5 h-3.5" />
+            <span>Try Again</span>
+          </Button>
+        </div>
+      )}
+
+      {/* 3. Empty State */}
+      {!isLoading && !error && filteredProducts.length === 0 && (
+        <div className="py-16 text-center space-y-3">
+          <ShoppingBag className="w-10 h-10 text-neutral-400 mx-auto" />
+          <p className="text-neutral-600 text-sm font-semibold">
+            No handloom products found matching your active filters.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={resetFilters}
+            className="inline-flex items-center gap-1.5"
+          >
+            <RefreshCcw className="w-3.5 h-3.5" />
+            <span>Reset All Filters</span>
+          </Button>
+        </div>
+      )}
+
+      {/* 4. Success State: Strict 2 columns on mobile, 4 columns on desktop */}
+      {!isLoading && !error && filteredProducts.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
           {filteredProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
