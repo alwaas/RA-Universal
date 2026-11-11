@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { sql } from "drizzle-orm";
 import { db } from "@/db";
+import { isDemoFallbackAllowed } from "@/lib/services/product.service";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     if (!db) {
-      if (process.env.NODE_ENV === "production" && process.env.ENABLE_DEMO_FALLBACK !== "true") {
+      if (!isDemoFallbackAllowed()) {
         return NextResponse.json({ status: "error" }, { status: 503 });
       }
       return NextResponse.json({ status: "ok" });
