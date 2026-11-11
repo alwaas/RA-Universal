@@ -27,13 +27,26 @@ import {
   Star,
   RefreshCw,
   Server,
+  ShoppingCart,
+  Users,
+  Printer,
+  FileText,
+  CheckSquare,
+  Square,
+  Search,
+  Copy,
+  Download,
+  Eye,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
+import { AmazonInvoice } from "@/components/admin/AmazonInvoice";
+import { toast } from "@/lib/store/useToastStore";
 import { formatINR } from "@/lib/formatters";
-import type { Product, ProductCategory, BadgeColor } from "@/types";
+import type { Product, ProductCategory, BadgeColor, Order, OrderStatus, CustomerProfile } from "@/types";
 
 interface OfferState {
   id: string;
@@ -90,6 +103,7 @@ function AdminDashboardContent() {
   // Create form state with multi-color & multi-angle support
   const [newProductForm, setNewProductForm] = useState({
     title: "",
+    sku: "",
     category: "scarves_dupattas" as ProductCategory,
     fabric: "100% Pure Handloom Cotton",
     description: "Authentic handwoven textile crafted by traditional artisans.",
@@ -113,6 +127,20 @@ function AdminDashboardContent() {
   const [selectedAngleLabel, setSelectedAngleLabel] = useState<string>("Front View");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [customImageUrlInput, setCustomImageUrlInput] = useState("");
+
+  // Orders & Invoicing state
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [orderSearchQuery, setOrderSearchQuery] = useState("");
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
+  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+  const [ordersToPrint, setOrdersToPrint] = useState<Order[]>([]);
+
+  // Customers state
+  const [customers, setCustomers] = useState<CustomerProfile[]>([]);
+  const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
+  const [customerSearchQuery, setCustomerSearchQuery] = useState("");
 
   // Health and Password Rotation state (Req 5, 6, 10)
   const [healthData, setHealthData] = useState<any>(null);
@@ -193,10 +221,133 @@ function AdminDashboardContent() {
     }
   };
 
+  // Load Orders
+  const fetchOrders = async () => {
+    try {
+      setIsLoadingOrders(true);
+      const res = await fetch("/api/orders");
+      const data = await res.json();
+      if (res.ok && data.success && Array.isArray(data.data)) {
+        setOrders(data.data);
+      }
+    } catch {
+      console.warn("Could not fetch orders");
+    } finally {
+      setIsLoadingOrders(false);
+    }
+  };
+
+  // Load Customers
+  const fetchCustomers = async () => {
+    try {
+      setIsLoadingCustomers(true);
+      const res = await fetch("/api/admin/customers");
+      const data = await res.json();
+      if (res.ok && data.success && Array.isArray(data.data)) {
+        setCustomers(data.data);
+      }
+    } catch {
+      console.warn("Could not fetch customers");
+    } finally {
+      setIsLoadingCustomers(false);
+    }
+  };
+
+  // Update Order Status
+  const handleUpdateOrderStatus = async (orderId: string, newStatus: OrderStatus) => {
+    try {
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? { ...o, orderStatus: newStatus } : o))
+      );
+
+      const res = await fetch(`/api/admin/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderStatus: newStatus }),
+      });
+
+      if (res.ok) {
+        toast.success(`Order status updated to "${newStatus.toUpperCase()}"!`);
+      } else {
+        toast.error("Failed to update order status.");
+        fetchOrders();
+      }
+    } catch {
+      toast.error("Network error while updating order status.");
+      fetchOrders();
+    }
+  };
+
+  // Multi-select & Bulk Print helpers
+  const handleToggleSelectOrder = (orderId: string) => {
+    setSelectedOrderIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(orderId)) {
+        next.delete(orderId);
+      } else {
+        next.add(orderId);
+      }
+      return next;
+    });
+  };
+
+  const handleSelectAllOrders = () => {
+    if (selectedOrderIds.size === filteredOrders.length) {
+      setSelectedOrderIds(new Set());
+    } else {
+      setSelectedOrderIds(new Set(filteredOrders.map((o) => o.id)));
+    }
+  };
+
+  const handleSinglePrintInvoice = (order: Order) => {
+    setOrdersToPrint([order]);
+    setIsInvoiceModalOpen(true);
+  };
+
+  const handleBulkPrintInvoices = () => {
+    const selected = orders.filter((o) => selectedOrderIds.has(o.id));
+    if (selected.length === 0) {
+      toast.warning("Please select at least one order to generate tax invoices.");
+      return;
+    }
+    setOrdersToPrint(selected);
+    setIsInvoiceModalOpen(true);
+  };
+
+  const filteredOrders = orders.filter((order) => {
+    if (orderStatusFilter !== "all" && order.orderStatus !== orderStatusFilter) {
+      return false;
+    }
+    if (orderSearchQuery.trim()) {
+      const q = orderSearchQuery.toLowerCase();
+      const matchNum = order.orderNumber.toLowerCase().includes(q);
+      const matchName = order.customerName.toLowerCase().includes(q);
+      const matchPhone = order.customerPhone.includes(q);
+      const matchCity = order.shippingCity.toLowerCase().includes(q);
+      const matchSku = order.items.some((i) => i.sku?.toLowerCase().includes(q));
+      return matchNum || matchName || matchPhone || matchCity || matchSku;
+    }
+    return true;
+  });
+
+  const filteredCustomers = customers.filter((cust) => {
+    if (!customerSearchQuery.trim()) return true;
+    const q = customerSearchQuery.toLowerCase();
+    return (
+      cust.fullName.toLowerCase().includes(q) ||
+      cust.phone.includes(q) ||
+      (cust.email && cust.email.toLowerCase().includes(q)) ||
+      (cust.addressCity && cust.addressCity.toLowerCase().includes(q)) ||
+      (cust.addressPincode && cust.addressPincode.includes(q))
+    );
+  });
+
   useEffect(() => {
     fetchProducts();
     fetchOffer();
     fetchEnquiries();
+    fetchOrders();
+    fetchCustomers();
     if (activeTab === "security") {
       fetchAdminHealth();
     }
@@ -218,6 +369,7 @@ function AdminDashboardContent() {
 
     try {
       setIsUploadingImage(true);
+      toast.info("Uploading product photos to server...", 2000);
       const res = await fetch("/api/admin/upload", {
         method: "POST",
         body: formData,
@@ -288,6 +440,7 @@ function AdminDashboardContent() {
             });
           }
 
+          toast.success(`Successfully uploaded ${newUrls.length} photo(s)!`);
           setFeedback({
             type: "success",
             text: `Successfully uploaded ${newUrls.length} photo(s) for ${
@@ -296,9 +449,11 @@ function AdminDashboardContent() {
           });
         }
       } else {
+        toast.error(data.error?.message || "Failed to upload image(s)");
         setFeedback({ type: "error", text: data.error?.message || "Failed to upload image(s)" });
       }
     } catch {
+      toast.error("Network error occurred during image upload");
       setFeedback({ type: "error", text: "Network error occurred during image upload" });
     } finally {
       setIsUploadingImage(false);
@@ -566,13 +721,16 @@ function AdminDashboardContent() {
 
       const data = await res.json();
       if (res.ok && data.success) {
+        toast.success("Admin password successfully updated!");
         setFeedback({ type: "success", text: "Admin password successfully updated and rotated!" });
         setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
         fetchAdminHealth();
       } else {
+        toast.error(data.error?.message || "Failed to rotate password.");
         setFeedback({ type: "error", text: data.error?.message || "Failed to rotate password." });
       }
     } catch {
+      toast.error("Network error occurred while updating password.");
       setFeedback({ type: "error", text: "Network error occurred while updating password." });
     } finally {
       setIsRotatingPassword(false);
@@ -593,12 +751,14 @@ function AdminDashboardContent() {
         setProducts((prev) =>
           prev.map((p) => (p.id === product.id ? { ...p, status: nextStatus } : p))
         );
+        toast.success(`Product "${product.title}" is now ${nextStatus}.`);
         setFeedback({
           type: "success",
           text: `Product "${product.title}" is now ${nextStatus}.`,
         });
       }
     } catch {
+      toast.error("Failed to update product status on server.");
       setFeedback({ type: "error", text: "Failed to update product status on server." });
     }
   };
@@ -607,6 +767,7 @@ function AdminDashboardContent() {
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newProductForm.sellingPrice > newProductForm.mrp) {
+      toast.error("Selling Price cannot exceed MRP.");
       setFeedback({ type: "error", text: "Validation Error: Selling Price cannot exceed MRP." });
       return;
     }
@@ -646,6 +807,7 @@ function AdminDashboardContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          sku: newProductForm.sku?.trim() || undefined,
           title: newProductForm.title,
           category: newProductForm.category,
           fabric: newProductForm.fabric,
@@ -667,12 +829,15 @@ function AdminDashboardContent() {
       const data = await res.json();
       if (res.ok && data.success) {
         setIsCreateModalOpen(false);
+        toast.success(`Product "${newProductForm.title}" published successfully!`);
         setFeedback({ type: "success", text: `Product "${newProductForm.title}" created successfully!` });
         fetchProducts();
       } else {
+        toast.error(data.error?.message || "Failed to create product.");
         setFeedback({ type: "error", text: data.error?.message || "Failed to create product." });
       }
     } catch {
+      toast.error("Network error occurred while creating product.");
       setFeedback({ type: "error", text: "Network error occurred while creating product." });
     } finally {
       setIsSubmitting(false);
@@ -685,6 +850,7 @@ function AdminDashboardContent() {
     if (!editingProduct) return;
 
     if (editingProduct.sellingPrice > editingProduct.mrp) {
+      toast.error("Selling Price cannot exceed MRP.");
       setFeedback({ type: "error", text: "Validation Error: Selling Price cannot exceed MRP." });
       return;
     }
@@ -714,6 +880,7 @@ function AdminDashboardContent() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          sku: editingProduct.sku?.trim() || undefined,
           title: editingProduct.title,
           fabric: editingProduct.fabric,
           category: editingProduct.category,
@@ -735,13 +902,16 @@ function AdminDashboardContent() {
 
       if (res.ok) {
         setEditingProduct(null);
+        toast.success(`Product "${editingProduct.title}" updated successfully!`);
         setFeedback({ type: "success", text: `Product "${editingProduct.title}" updated successfully!` });
         fetchProducts();
       } else {
         const data = await res.json();
+        toast.error(data.error?.message || "Failed to update product.");
         setFeedback({ type: "error", text: data.error?.message || "Failed to update product." });
       }
     } catch {
+      toast.error("Network error occurred while updating product.");
       setFeedback({ type: "error", text: "Network error occurred while updating product." });
     } finally {
       setIsSubmitting(false);
@@ -758,11 +928,14 @@ function AdminDashboardContent() {
       if (res.ok) {
         setProducts((prev) => prev.filter((p) => p.id !== productId));
         setDeletingProductId(null);
+        toast.success("Product deleted from catalogue");
         setFeedback({ type: "success", text: "Product deleted from catalogue." });
       } else {
+        toast.error("Failed to delete product from server.");
         setFeedback({ type: "error", text: "Failed to delete product from server." });
       }
     } catch {
+      toast.error("Network error while deleting product.");
       setFeedback({ type: "error", text: "Network error while deleting product." });
     }
   };
@@ -782,6 +955,7 @@ function AdminDashboardContent() {
 
       if (res.ok) {
         setOffer({ ...offer, isPopupActive: nextState });
+        toast.success(`Promotional banner is now ${nextState ? "active" : "disabled"}!`);
         setFeedback({
           type: "success",
           text: `Offer popup is now ${nextState ? "activated" : "deactivated"}.`,
@@ -828,6 +1002,18 @@ function AdminDashboardContent() {
               <span>Add New Product</span>
             </Button>
           )}
+
+          {activeTab === "orders" && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleBulkPrintInvoices}
+              className="flex items-center gap-1.5 bg-neutral-900 hover:bg-neutral-800 text-white"
+            >
+              <Printer className="w-4 h-4" />
+              <span>Print Selected Bills ({selectedOrderIds.size})</span>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -843,6 +1029,35 @@ function AdminDashboardContent() {
         >
           <Package className="w-4 h-4 text-accent-gold" />
           <span>Products Catalogue ({products.length})</span>
+        </Link>
+
+        <Link
+          href="/admin?tab=orders"
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-[6px] transition-colors whitespace-nowrap ${
+            activeTab === "orders"
+              ? "bg-neutral-900 text-white"
+              : "bg-white text-neutral-700 border border-neutral-200 hover:bg-neutral-50"
+          }`}
+        >
+          <ShoppingCart className="w-4 h-4 text-blue-500" />
+          <span>Orders ({orders.length})</span>
+          {orders.filter((o) => o.orderStatus === "pending").length > 0 && (
+            <span className="px-1.5 py-0.2 bg-amber-500 text-white rounded-full text-[10px] font-bold">
+              {orders.filter((o) => o.orderStatus === "pending").length}
+            </span>
+          )}
+        </Link>
+
+        <Link
+          href="/admin?tab=customers"
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-[6px] transition-colors whitespace-nowrap ${
+            activeTab === "customers"
+              ? "bg-neutral-900 text-white"
+              : "bg-white text-neutral-700 border border-neutral-200 hover:bg-neutral-50"
+          }`}
+        >
+          <Users className="w-4 h-4 text-emerald-500" />
+          <span>Customers ({customers.length})</span>
         </Link>
 
         <Link
@@ -970,6 +1185,7 @@ function AdminDashboardContent() {
                 <thead>
                   <tr className="bg-neutral-100 border-b border-neutral-200 text-neutral-700 font-semibold uppercase tracking-wider">
                     <th className="py-3 px-4">Item</th>
+                    <th className="py-3 px-4">SKU / Unique ID</th>
                     <th className="py-3 px-4">Category</th>
                     <th className="py-3 px-4">Price (MRP / Sale)</th>
                     <th className="py-3 px-4">Discount</th>
@@ -982,7 +1198,7 @@ function AdminDashboardContent() {
                 <tbody className="divide-y divide-neutral-200 text-neutral-800">
                   {isLoading ? (
                     <tr>
-                      <td colSpan={8} className="py-12 text-center text-neutral-500">
+                      <td colSpan={9} className="py-12 text-center text-neutral-500">
                         <div className="flex items-center justify-center gap-2">
                           <div className="w-4 h-4 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
                           <span>Loading product catalogue...</span>
@@ -991,7 +1207,7 @@ function AdminDashboardContent() {
                     </tr>
                   ) : products.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="py-12 text-center text-neutral-500">
+                      <td colSpan={9} className="py-12 text-center text-neutral-500">
                         No products available in catalogue. Click &quot;Add New Product&quot; to begin.
                       </td>
                     </tr>
@@ -1013,6 +1229,10 @@ function AdminDashboardContent() {
                               <p className="text-[11px] text-neutral-500 truncate">{product.fabric}</p>
                             </div>
                           </div>
+                        </td>
+
+                        <td className="py-3 px-4 font-mono font-bold text-neutral-800">
+                          {product.sku || "—"}
                         </td>
 
                         <td className="py-3 px-4 font-medium capitalize">
@@ -1437,6 +1657,489 @@ function AdminDashboardContent() {
           </div>
         </div>
       )}
+
+      {/* ================================================================== */}
+      {/* TAB 6: ORDERS MANAGEMENT & AMAZON INVOICING */}
+      {/* ================================================================== */}
+      {activeTab === "orders" && (
+        <div className="space-y-6">
+          {/* Order Metrics Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+            <div className="bg-white p-3.5 rounded-[8px] border border-neutral-300 space-y-1 shadow-sm">
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase">Total Orders</span>
+              <p className="text-xl font-bold text-neutral-900">{orders.length}</p>
+            </div>
+            <div className="bg-white p-3.5 rounded-[8px] border border-neutral-300 space-y-1 shadow-sm">
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase">Pending</span>
+              <p className="text-xl font-bold text-amber-600">
+                {orders.filter((o) => o.orderStatus === "pending").length}
+              </p>
+            </div>
+            <div className="bg-white p-3.5 rounded-[8px] border border-neutral-300 space-y-1 shadow-sm">
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase">Confirmed</span>
+              <p className="text-xl font-bold text-blue-600">
+                {orders.filter((o) => o.orderStatus === "confirmed").length}
+              </p>
+            </div>
+            <div className="bg-white p-3.5 rounded-[8px] border border-neutral-300 space-y-1 shadow-sm">
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase">Shipped</span>
+              <p className="text-xl font-bold text-purple-600">
+                {orders.filter((o) => o.orderStatus === "shipped").length}
+              </p>
+            </div>
+            <div className="bg-white p-3.5 rounded-[8px] border border-neutral-300 space-y-1 shadow-sm">
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase">Delivered</span>
+              <p className="text-xl font-bold text-emerald-600">
+                {orders.filter((o) => o.orderStatus === "delivered").length}
+              </p>
+            </div>
+            <div className="bg-white p-3.5 rounded-[8px] border border-neutral-300 space-y-1 shadow-sm">
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase">Total Revenue</span>
+              <p className="text-xl font-bold text-neutral-900 font-mono">
+                {formatINR(orders.reduce((sum, o) => sum + o.totalAmount, 0))}
+              </p>
+            </div>
+          </div>
+
+          {/* Orders Main Card */}
+          <div className="bg-white border border-neutral-300 rounded-[8px] overflow-hidden shadow-sm">
+            {/* Header, Search & Filter Bar */}
+            <div className="p-4 border-b border-neutral-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div>
+                <h2 className="font-serif text-lg font-bold text-neutral-900">
+                  Customer Orders ({filteredOrders.length})
+                </h2>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Select orders to print batch Amazon A4 tax invoices with auto page-breaks.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Search */}
+                <div className="relative w-full sm:w-60">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-neutral-400" />
+                  <input
+                    type="text"
+                    placeholder="Search order #, name, SKU, city..."
+                    value={orderSearchQuery}
+                    onChange={(e) => setOrderSearchQuery(e.target.value)}
+                    className="w-full h-9 pl-8 pr-3 text-xs bg-white border border-neutral-300 rounded-[6px] focus:outline-none focus:border-brand-primary"
+                  />
+                </div>
+
+                {/* Status Filter */}
+                <select
+                  value={orderStatusFilter}
+                  onChange={(e) => setOrderStatusFilter(e.target.value)}
+                  className="h-9 px-3 text-xs bg-white border border-neutral-300 rounded-[6px] font-medium text-neutral-800 focus:outline-none focus:border-brand-primary"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="shipped">Shipped</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+
+                {/* Bulk Print Action */}
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={handleBulkPrintInvoices}
+                  disabled={selectedOrderIds.size === 0}
+                  className={`flex items-center gap-1.5 transition-all ${
+                    selectedOrderIds.size > 0
+                      ? "bg-neutral-900 text-white hover:bg-neutral-800 shadow"
+                      : "bg-neutral-200 text-neutral-500 cursor-not-allowed"
+                  }`}
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>Print Selected Invoices ({selectedOrderIds.size})</span>
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSelectAllOrders}
+                  className="text-xs"
+                >
+                  {selectedOrderIds.size === filteredOrders.length && filteredOrders.length > 0
+                    ? "Deselect All"
+                    : "Select All"}
+                </Button>
+              </div>
+            </div>
+
+            {/* Orders Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-neutral-100 border-b border-neutral-200 text-neutral-700 font-semibold uppercase tracking-wider">
+                    <th className="py-3 px-3 w-10 text-center">
+                      <input
+                        type="checkbox"
+                        checked={
+                          filteredOrders.length > 0 && selectedOrderIds.size === filteredOrders.length
+                        }
+                        onChange={handleSelectAllOrders}
+                        className="rounded border-neutral-300 text-brand-primary focus:ring-brand-primary w-4 h-4 cursor-pointer"
+                      />
+                    </th>
+                    <th className="py-3 px-4">Order # & Date</th>
+                    <th className="py-3 px-4">Customer & Delivery Address</th>
+                    <th className="py-3 px-4">Items Ordered & SKU</th>
+                    <th className="py-3 px-4">Total Amount</th>
+                    <th className="py-3 px-4">Order Status</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-200 text-neutral-800">
+                  {isLoadingOrders ? (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-neutral-500">
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-4 h-4 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
+                          <span>Loading customer orders...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : filteredOrders.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-neutral-500">
+                        <ShoppingCart className="w-8 h-8 text-neutral-400 mx-auto mb-2" />
+                        <p className="font-semibold text-neutral-700">No customer orders found</p>
+                        <p className="text-[11px] text-neutral-500 mt-0.5">
+                          Orders placed via the website or WhatsApp will appear here automatically.
+                        </p>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredOrders.map((order) => {
+                      const isSelected = selectedOrderIds.has(order.id);
+                      const formattedDate = new Date(order.createdAt).toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      });
+
+                      const statusColors: Record<string, string> = {
+                        pending: "bg-amber-100 text-amber-800 border-amber-300",
+                        confirmed: "bg-blue-100 text-blue-800 border-blue-300",
+                        shipped: "bg-purple-100 text-purple-800 border-purple-300",
+                        delivered: "bg-emerald-100 text-emerald-800 border-emerald-300",
+                        cancelled: "bg-red-100 text-red-800 border-red-300",
+                      };
+
+                      return (
+                        <tr
+                          key={order.id}
+                          className={`hover:bg-neutral-50 transition-colors ${
+                            isSelected ? "bg-amber-50/50" : ""
+                          }`}
+                        >
+                          <td className="py-3 px-3 text-center">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => handleToggleSelectOrder(order.id)}
+                              className="rounded border-neutral-300 text-brand-primary focus:ring-brand-primary w-4 h-4 cursor-pointer"
+                            />
+                          </td>
+
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-mono font-bold text-neutral-900 text-xs">
+                                #{order.orderNumber}
+                              </span>
+                              <button
+                                type="button"
+                                title="Copy Order ID"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(order.orderNumber);
+                                  toast.info(`Copied #${order.orderNumber} to clipboard!`);
+                                }}
+                                className="text-neutral-400 hover:text-neutral-700 p-0.5"
+                              >
+                                <Copy className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                            <span className="text-[11px] text-neutral-500 block mt-0.5">
+                              {formattedDate}
+                            </span>
+                          </td>
+
+                          <td className="py-3 px-4 max-w-xs">
+                            <p className="font-bold text-neutral-900">{order.customerName}</p>
+                            <p className="text-[11px] text-neutral-600 flex items-center gap-1 mt-0.5">
+                              <Phone className="w-3 h-3 text-neutral-400" />
+                              <a
+                                href={`tel:${order.customerPhone}`}
+                                className="hover:underline text-neutral-800 font-medium"
+                              >
+                                +91 {order.customerPhone}
+                              </a>
+                            </p>
+                            <p className="text-[11px] text-neutral-500 mt-0.5 line-clamp-2">
+                              {order.shippingAddress}, {order.shippingCity} ({order.shippingPincode})
+                            </p>
+                          </td>
+
+                          <td className="py-3 px-4">
+                            <div className="space-y-1 max-w-sm">
+                              {order.items.map((item, idx) => (
+                                <div key={idx} className="text-[11px] text-neutral-800 flex items-start gap-1">
+                                  <span className="font-mono font-bold text-neutral-900 bg-neutral-100 px-1 rounded text-[10px]">
+                                    {item.sku || "RA-SKU"}
+                                  </span>
+                                  <span className="truncate">
+                                    {item.title} {item.colorName ? `(${item.colorName})` : ""} × {item.quantity}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+
+                          <td className="py-3 px-4">
+                            <span className="font-mono font-bold text-sm text-neutral-900">
+                              {formatINR(order.totalAmount)}
+                            </span>
+                            <span className="block text-[10px] text-neutral-500 uppercase font-medium">
+                              {order.paymentStatus === "paid" ? "Paid" : "WhatsApp COD"}
+                            </span>
+                          </td>
+
+                          <td className="py-3 px-4">
+                            <select
+                              value={order.orderStatus}
+                              onChange={(e) =>
+                                handleUpdateOrderStatus(order.id, e.target.value as OrderStatus)
+                              }
+                              className={`h-7 px-2 text-xs font-semibold rounded border capitalize focus:outline-none ${
+                                statusColors[order.orderStatus] || "bg-neutral-100 text-neutral-800 border-neutral-300"
+                              }`}
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="confirmed">Confirmed</option>
+                              <option value="shipped">Shipped</option>
+                              <option value="delivered">Delivered</option>
+                              <option value="cancelled">Cancelled</option>
+                            </select>
+                          </td>
+
+                          <td className="py-3 px-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              {/* Print Amazon Bill Button */}
+                              <button
+                                type="button"
+                                onClick={() => handleSinglePrintInvoice(order)}
+                                className="px-2.5 py-1 bg-neutral-900 hover:bg-neutral-800 text-white rounded-[4px] font-semibold text-[11px] flex items-center gap-1 shadow-sm transition-colors"
+                                title="Generate Amazon Standard Tax Bill PDF"
+                              >
+                                <Printer className="w-3.5 h-3.5" />
+                                <span>Amazon Bill</span>
+                              </button>
+
+                              {/* WhatsApp Direct Contact */}
+                              <a
+                                href={`https://wa.me/91${order.customerPhone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
+                                  `Namaste ${order.customerName},\nRegarding your RA Heritage order #${order.orderNumber} for ${formatINR(
+                                    order.totalAmount
+                                  )}.\nWe are preparing your authentic handloom parcel for dispatch!`
+                                )}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1.5 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-[4px] transition-colors"
+                                title="Chat with customer on WhatsApp"
+                              >
+                                <MessageSquare className="w-3.5 h-3.5" />
+                              </a>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================================================================== */}
+      {/* TAB 7: CUSTOMER DIRECTORY & DISPATCH ADDRESSES */}
+      {/* ================================================================== */}
+      {activeTab === "customers" && (
+        <div className="space-y-6">
+          {/* Customer Metrics Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white p-4 rounded-[8px] border border-neutral-300 space-y-1 shadow-sm">
+              <span className="text-xs font-semibold text-neutral-500 uppercase">Registered Customers</span>
+              <p className="text-2xl font-bold text-neutral-900">{customers.length}</p>
+            </div>
+            <div className="bg-white p-4 rounded-[8px] border border-neutral-300 space-y-1 shadow-sm">
+              <span className="text-xs font-semibold text-neutral-500 uppercase">Ready Delivery Addresses</span>
+              <p className="text-2xl font-bold text-emerald-600">
+                {customers.filter((c) => c.addressCity).length}
+              </p>
+            </div>
+          </div>
+
+          {/* Customers Main Card */}
+          <div className="bg-white border border-neutral-300 rounded-[8px] overflow-hidden shadow-sm">
+            <div className="p-4 border-b border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="font-serif text-lg font-bold text-neutral-900">
+                  Customer Directory ({filteredCustomers.length})
+                </h2>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Stored customer accounts and delivery addresses for seamless courier dispatch and reorders.
+                </p>
+              </div>
+
+              <div className="relative w-full sm:w-72">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-neutral-400" />
+                <input
+                  type="text"
+                  placeholder="Search customers by name, phone, city..."
+                  value={customerSearchQuery}
+                  onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                  className="w-full h-9 pl-8 pr-3 text-xs bg-white border border-neutral-300 rounded-[6px] focus:outline-none focus:border-brand-primary"
+                />
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-neutral-100 border-b border-neutral-200 text-neutral-700 font-semibold uppercase tracking-wider">
+                    <th className="py-3 px-4">Customer Name</th>
+                    <th className="py-3 px-4">Contact Details</th>
+                    <th className="py-3 px-4">Delivery Street Address</th>
+                    <th className="py-3 px-4">City / State / PIN</th>
+                    <th className="py-3 px-4">Member Since</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-200 text-neutral-800">
+                  {isLoadingCustomers ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-neutral-500">
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-4 h-4 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
+                          <span>Loading customer directory...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : filteredCustomers.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-neutral-500">
+                        <Users className="w-8 h-8 text-neutral-400 mx-auto mb-2" />
+                        <p className="font-semibold text-neutral-700">No customers found</p>
+                        <p className="text-[11px] text-neutral-500 mt-0.5">
+                          When users register on the storefront, their accounts will appear here.
+                        </p>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredCustomers.map((cust) => {
+                      const formattedDate = new Date(cust.createdAt).toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      });
+
+                      const fullAddressString = `${cust.fullName}\nPhone: ${cust.phone}\n${
+                        cust.addressStreet ? `${cust.addressStreet}\n` : ""
+                      }${cust.addressCity || ""}, ${cust.addressState || ""} - ${cust.addressPincode || ""}`;
+
+                      return (
+                        <tr key={cust.id} className="hover:bg-neutral-50 transition-colors">
+                          <td className="py-3 px-4">
+                            <p className="font-bold text-neutral-900">{cust.fullName}</p>
+                            <span className="inline-block px-1.5 py-0.2 bg-neutral-100 text-neutral-600 rounded text-[10px] uppercase font-semibold">
+                              {cust.role}
+                            </span>
+                          </td>
+
+                          <td className="py-3 px-4">
+                            <p className="text-neutral-800 font-medium flex items-center gap-1">
+                              <Phone className="w-3 h-3 text-neutral-400" />
+                              <a href={`tel:${cust.phone}`} className="hover:underline">
+                                +91 {cust.phone}
+                              </a>
+                            </p>
+                            {cust.email && (
+                              <p className="text-[11px] text-neutral-500 flex items-center gap-1 mt-0.5">
+                                <Mail className="w-3 h-3 text-neutral-400" />
+                                <span>{cust.email}</span>
+                              </p>
+                            )}
+                          </td>
+
+                          <td className="py-3 px-4 max-w-xs">
+                            <p className="text-neutral-700">
+                              {cust.addressStreet || (
+                                <span className="text-neutral-400 italic">No street recorded</span>
+                              )}
+                            </p>
+                          </td>
+
+                          <td className="py-3 px-4">
+                            {cust.addressCity ? (
+                              <p className="font-medium text-neutral-800">
+                                {cust.addressCity}, {cust.addressState || "India"} -{" "}
+                                <span className="font-mono font-bold">{cust.addressPincode}</span>
+                              </p>
+                            ) : (
+                              <span className="text-neutral-400 italic">—</span>
+                            )}
+                          </td>
+
+                          <td className="py-3 px-4 text-neutral-500 text-[11px]">
+                            {formattedDate}
+                          </td>
+
+                          <td className="py-3 px-4 text-right">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                navigator.clipboard.writeText(fullAddressString);
+                                toast.success(`Copied ${cust.fullName}'s address to clipboard!`);
+                              }}
+                              className="inline-flex items-center gap-1 text-[11px] h-7 px-2"
+                              title="Copy complete delivery address for courier parcel"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>Copy Address</span>
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================================================================== */}
+      {/* MODAL: AMAZON-STYLE TAX INVOICE (BATCH & SINGLE PRINT) */}
+      {/* ================================================================== */}
+      {isInvoiceModalOpen && (
+        <AmazonInvoice
+          orders={ordersToPrint}
+          onClose={() => setIsInvoiceModalOpen(false)}
+        />
+      )}
       {/* ================================================================== */}
       {/* MODAL: CREATE NEW PRODUCT */}
       {/* ================================================================== */}
@@ -1449,13 +2152,22 @@ function AdminDashboardContent() {
           size="3xl"
         >
           <form onSubmit={handleCreateProduct} className="space-y-4 sm:space-y-5">
-            <Input
-              label="Product Title"
-              required
-              placeholder="e.g. Sambalpuri Cotton Gamcha"
-              value={newProductForm.title}
-              onChange={(e) => setNewProductForm({ ...newProductForm, title: e.target.value })}
-            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <Input
+                label="Product Title"
+                required
+                placeholder="e.g. Sambalpuri Cotton Gamcha"
+                value={newProductForm.title}
+                onChange={(e) => setNewProductForm({ ...newProductForm, title: e.target.value })}
+              />
+
+              <Input
+                label="Product Unique ID / SKU (Optional)"
+                placeholder="e.g. RA-GAM-009 (auto-generated if empty)"
+                value={newProductForm.sku || ""}
+                onChange={(e) => setNewProductForm({ ...newProductForm, sku: e.target.value.toUpperCase() })}
+              />
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
@@ -1809,12 +2521,21 @@ function AdminDashboardContent() {
           size="3xl"
         >
           <form onSubmit={handleUpdateProduct} className="space-y-4 sm:space-y-5">
-            <Input
-              label="Product Title"
-              required
-              value={editingProduct.title}
-              onChange={(e) => setEditingProduct({ ...editingProduct, title: e.target.value })}
-            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <Input
+                label="Product Title"
+                required
+                value={editingProduct.title}
+                onChange={(e) => setEditingProduct({ ...editingProduct, title: e.target.value })}
+              />
+
+              <Input
+                label="Product Unique ID / SKU"
+                placeholder="e.g. RA-GAM-001"
+                value={editingProduct.sku || ""}
+                onChange={(e) => setEditingProduct({ ...editingProduct, sku: e.target.value.toUpperCase() })}
+              />
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>

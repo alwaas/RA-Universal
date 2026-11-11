@@ -20,6 +20,7 @@ import { ColorSelector } from "@/components/product/ColorSelector";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useCartStore } from "@/lib/store/useCartStore";
+import { toast } from "@/lib/store/useToastStore";
 import { BuyNowInterceptModal } from "@/components/cart/BuyNowInterceptModal";
 import type { Product, ProductColor } from "@/types";
 
@@ -231,6 +232,7 @@ export default function ProductDetailPage({
   const handleAddToCart = () => {
     if (isOutOfStock) return;
     addItem(product, selectedColor?.name);
+    toast.success(`Added "${product.title}" to cart!`);
   };
 
   const handleBuyNow = () => {
@@ -240,10 +242,14 @@ export default function ProductDetailPage({
 
   const orderItem = [
     {
+      productId: product.id,
+      sku: product.sku,
       title: product.title,
       color: selectedColor?.name,
       quantity: 1,
       price: product.sellingPrice,
+      mrp: product.mrp,
+      imageUrl: activeImageUrl,
     },
   ];
 
@@ -284,6 +290,7 @@ export default function ProductDetailPage({
                     src={img.imageUrl}
                     alt={img.altText || `${product.title} photo ${idx + 1}`}
                     fill
+                    unoptimized={img.imageUrl.startsWith("data:") || img.imageUrl.startsWith("/uploads/")}
                     sizes="80px"
                     className="object-cover object-center"
                   />
@@ -316,6 +323,7 @@ export default function ProductDetailPage({
               alt={product.title}
               fill
               priority
+              unoptimized={activeImageUrl.startsWith("data:") || activeImageUrl.startsWith("/uploads/")}
               sizes="(max-width: 768px) 100vw, 50vw"
               className={`object-cover object-center transition-transform duration-200 ${
                 isZooming ? "scale-105" : "scale-100"
@@ -367,9 +375,16 @@ export default function ProductDetailPage({
         {/* ================================================================== */}
         <div className="flex flex-col justify-between space-y-6">
           <div className="space-y-4">
-            <span className="text-xs font-bold uppercase tracking-wider text-accent-gold">
-              {product.category === "gamchas" ? "Men's Cotton Gamcha" : "Women's Dupatta & Scarf"}
-            </span>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-accent-gold">
+                {product.category === "gamchas" ? "Men's Cotton Gamcha" : "Women's Dupatta & Scarf"}
+              </span>
+              {product.sku && (
+                <span className="text-xs font-mono font-semibold bg-neutral-100 text-neutral-700 border border-neutral-300/80 px-2.5 py-0.5 rounded">
+                  Product ID: {product.sku}
+                </span>
+              )}
+            </div>
 
             <h1 className="font-serif text-2xl sm:text-3xl font-bold text-neutral-900 leading-snug">
               {product.title}

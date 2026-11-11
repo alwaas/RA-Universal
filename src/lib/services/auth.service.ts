@@ -1,10 +1,10 @@
 import bcrypt from "bcryptjs";
-import { eq, or } from "drizzle-orm";
+import { eq, or, desc } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { createSessionToken } from "@/lib/auth/session";
 import type { SignupInput } from "@/lib/validation/auth.schema";
-import type { SessionUser } from "@/types";
+import type { SessionUser, CustomerProfile, UserRole } from "@/types";
 
 export interface UserProfileResponse extends SessionUser {
   addressStreet?: string | null;
@@ -29,7 +29,72 @@ interface StoredUser {
   createdAt: string;
 }
 
-const inMemoryUsers: Map<string, StoredUser> = new Map();
+const inMemoryUsers: Map<string, StoredUser> = new Map([
+  [
+    "usr-cust-101",
+    {
+      id: "usr-cust-101",
+      fullName: "Ananya Mukherjee",
+      phone: "9830123456",
+      email: "ananya.m@example.com",
+      passwordHash: "",
+      role: "customer",
+      addressStreet: "Flat 4B, Shantiniketan Enclave, Gariahat",
+      addressCity: "Kolkata",
+      addressState: "West Bengal",
+      addressPincode: "700019",
+      createdAt: new Date(Date.now() - 30 * 86400000).toISOString(),
+    },
+  ],
+  [
+    "usr-cust-102",
+    {
+      id: "usr-cust-102",
+      fullName: "Vikramaditya Roy",
+      phone: "9820543210",
+      email: "vikram.roy@example.com",
+      passwordHash: "",
+      role: "customer",
+      addressStreet: "House 12, Indiranagar 2nd Stage",
+      addressCity: "Bengaluru",
+      addressState: "Karnataka",
+      addressPincode: "560038",
+      createdAt: new Date(Date.now() - 20 * 86400000).toISOString(),
+    },
+  ],
+  [
+    "usr-cust-103",
+    {
+      id: "usr-cust-103",
+      fullName: "Pooja Deshmukh",
+      phone: "9765432109",
+      email: "pooja.d@example.com",
+      passwordHash: "",
+      role: "customer",
+      addressStreet: "Sector 14, Vashi",
+      addressCity: "Navi Mumbai",
+      addressState: "Maharashtra",
+      addressPincode: "400703",
+      createdAt: new Date(Date.now() - 10 * 86400000).toISOString(),
+    },
+  ],
+  [
+    "usr-cust-104",
+    {
+      id: "usr-cust-104",
+      fullName: "Rajeshwari Verma",
+      phone: "9415123890",
+      email: "rajeshwari.v@example.com",
+      passwordHash: "",
+      role: "customer",
+      addressStreet: "B-21, Assi Ghat Road, Shivala",
+      addressCity: "Varanasi",
+      addressState: "Uttar Pradesh",
+      addressPincode: "221005",
+      createdAt: new Date(Date.now() - 5 * 86400000).toISOString(),
+    },
+  ],
+]);
 
 export class AuthService {
   /**
@@ -372,5 +437,56 @@ export class AuthService {
     }
 
     return true;
+  }
+
+  /**
+   * Retrieves all registered customers for admin management and delivery dispatch.
+   */
+  static async getCustomers(): Promise<CustomerProfile[]> {
+    if (db) {
+      try {
+        const dbUsers = await db.query.users.findMany({
+          where: eq(users.role, "customer"),
+          orderBy: [desc(users.createdAt)],
+        });
+
+        if (dbUsers && dbUsers.length > 0) {
+          return dbUsers.map((u) => ({
+            id: u.id,
+            fullName: u.fullName,
+            phone: u.phone,
+            email: u.email,
+            role: u.role as UserRole,
+            addressStreet: u.addressStreet,
+            addressCity: u.addressCity,
+            addressState: u.addressState,
+            addressPincode: u.addressPincode,
+            createdAt: u.createdAt.toISOString(),
+          }));
+        }
+      } catch (err) {
+        console.warn("[AuthService] DB getCustomers failed, falling back to in-memory:", err);
+      }
+    }
+
+    const customers: CustomerProfile[] = [];
+    for (const u of Array.from(inMemoryUsers.values())) {
+      if (u.role === "customer") {
+        customers.push({
+          id: u.id,
+          fullName: u.fullName,
+          phone: u.phone,
+          email: u.email,
+          role: u.role,
+          addressStreet: u.addressStreet,
+          addressCity: u.addressCity,
+          addressState: u.addressState,
+          addressPincode: u.addressPincode,
+          createdAt: u.createdAt,
+        });
+      }
+    }
+
+    return customers;
   }
 }

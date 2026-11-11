@@ -8,6 +8,7 @@ import { ColorSelector } from "./ColorSelector";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useCartStore } from "@/lib/store/useCartStore";
+import { toast } from "@/lib/store/useToastStore";
 import type { Product, ProductColor } from "@/types";
 
 export interface ProductCardProps {
@@ -49,6 +50,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     e.stopPropagation();
     if (isOutOfStock) return;
     addItem(product, selectedColor?.name);
+    toast.success(`Added "${product.title}" to cart!`);
   };
 
   const handleBuyNow = (e: React.MouseEvent) => {
@@ -79,6 +81,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           src={activeImage}
           alt={product.title}
           fill
+          unoptimized={activeImage.startsWith("data:") || activeImage.startsWith("/uploads/")}
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           className="object-cover object-center transition-transform duration-300 group-hover:scale-105"
         />
@@ -112,6 +115,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               {product.title}
             </h3>
           </Link>
+          {product.sku && (
+            <span className="text-[10px] font-mono text-neutral-400 block mt-0.5">
+              ID: {product.sku}
+            </span>
+          )}
 
           {/* Pricing Block */}
           <div className="mt-2.5">

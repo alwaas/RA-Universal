@@ -18,6 +18,7 @@ export const productColorSchema = z.object({
 });
 
 export const productBaseSchema = z.object({
+  sku: z.string().max(50).optional(),
   title: z.string().min(3, "Title must be at least 3 characters").max(255),
   slug: z.string().min(3).max(255).optional(),
   description: z.string().min(10, "Description must be at least 10 characters"),

@@ -55,6 +55,7 @@ export const useCartStore = create<CartStore>()(
           const newItem: CartItem = {
             id: `${product.id}-${selectedColorName || "default"}-${Date.now()}`,
             productId: product.id,
+            sku: product.sku || `RA-${product.category === "gamchas" ? "GAM" : "DUP"}-${product.id.slice(0, 5).toUpperCase()}`,
             title: product.title,
             slug: product.slug,
             imageUrl: primaryImage,

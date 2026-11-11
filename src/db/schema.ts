@@ -11,6 +11,7 @@ import {
   primaryKey,
   index,
   check,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 
@@ -39,6 +40,18 @@ export const enquiryStatusEnum = pgEnum("enquiry_status", [
   "new",
   "contacted",
   "closed",
+]);
+export const orderStatusEnum = pgEnum("order_status", [
+  "pending",
+  "confirmed",
+  "shipped",
+  "delivered",
+  "cancelled",
+]);
+export const paymentStatusEnum = pgEnum("payment_status", [
+  "pending_whatsapp",
+  "paid",
+  "cod",
 ]);
 
 // ============================================================================
@@ -73,6 +86,7 @@ export const products = pgTable(
   "products",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+    sku: varchar("sku", { length: 50 }).unique(),
     title: varchar("title", { length: 255 }).notNull(),
     slug: varchar("slug", { length: 255 }).notNull().unique(),
     description: text("description").notNull(),
@@ -320,5 +334,45 @@ export const cartItemsRelations = relations(cartItems, ({ one }) => ({
   color: one(productColors, {
     fields: [cartItems.colorId],
     references: [productColors.id],
+  }),
+}));
+
+// ============================================================================
+// 11. ORDERS TABLE (Customer Orders with Items, Address & Bill Details)
+// ============================================================================
+export const orders = pgTable(
+  "orders",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orderNumber: varchar("order_number", { length: 50 }).notNull().unique(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    customerName: varchar("customer_name", { length: 120 }).notNull(),
+    customerPhone: varchar("customer_phone", { length: 20 }).notNull(),
+    customerEmail: varchar("customer_email", { length: 191 }),
+    shippingAddress: text("shipping_address").notNull(),
+    shippingCity: varchar("shipping_city", { length: 100 }).notNull(),
+    shippingState: varchar("shipping_state", { length: 100 }).default("India").notNull(),
+    shippingPincode: varchar("shipping_pincode", { length: 10 }).notNull(),
+    totalAmount: numeric("total_amount", { precision: 10, scale: 2 }).notNull(),
+    mrpTotal: numeric("mrp_total", { precision: 10, scale: 2 }).notNull(),
+    savingsTotal: numeric("savings_total", { precision: 10, scale: 2 }).default("0").notNull(),
+    orderStatus: orderStatusEnum("order_status").default("pending").notNull(),
+    paymentStatus: paymentStatusEnum("payment_status").default("pending_whatsapp").notNull(),
+    itemsJson: jsonb("items_json").notNull(),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    orderNumberIdx: index("idx_orders_number").on(table.orderNumber),
+    customerPhoneIdx: index("idx_orders_phone").on(table.customerPhone),
+    orderStatusIdx: index("idx_orders_status").on(table.orderStatus),
+  })
+);
+
+export const ordersRelations = relations(orders, ({ one }) => ({
+  user: one(users, {
+    fields: [orders.userId],
+    references: [users.id],
   }),
 }));

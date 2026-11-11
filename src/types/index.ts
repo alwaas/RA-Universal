@@ -32,6 +32,7 @@ export interface ProductImage {
 
 export interface Product {
   id: string;
+  sku?: string;
   title: string;
   slug: string;
   description: string;
@@ -52,6 +53,7 @@ export interface Product {
 export interface CartItem {
   id: string;
   productId: string;
+  sku?: string;
   title: string;
   slug: string;
   imageUrl: string;
@@ -59,6 +61,57 @@ export interface CartItem {
   mrp: number;
   sellingPrice: number;
   quantity: number;
+}
+
+export type OrderStatus = "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
+export type PaymentStatus = "pending_whatsapp" | "paid" | "cod";
+
+export interface OrderItem {
+  productId: string;
+  sku?: string;
+  title: string;
+  colorName?: string;
+  quantity: number;
+  sellingPrice: number;
+  mrp: number;
+  imageUrl?: string;
+}
+
+export interface Order {
+  id: string;
+  orderNumber: string;
+  userId?: string | null;
+  customerName: string;
+  customerPhone: string;
+  customerEmail?: string | null;
+  shippingAddress: string;
+  shippingCity: string;
+  shippingState: string;
+  shippingPincode: string;
+  totalAmount: number;
+  mrpTotal: number;
+  savingsTotal: number;
+  orderStatus: OrderStatus;
+  paymentStatus: PaymentStatus;
+  items: OrderItem[];
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CustomerProfile {
+  id: string;
+  fullName: string;
+  phone: string;
+  email?: string | null;
+  role: UserRole;
+  addressStreet?: string | null;
+  addressCity?: string | null;
+  addressState?: string | null;
+  addressPincode?: string | null;
+  createdAt: string;
+  ordersCount?: number;
+  totalSpent?: number;
 }
 
 export interface SessionUser {
