@@ -1438,13 +1438,17 @@ function AdminDashboardContent() {
         </div>
       )}
       {/* ================================================================== */}
+      {/* MODAL: CREATE NEW PRODUCT */}
+      {/* ================================================================== */}
       {isCreateModalOpen && (
         <Modal
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
           title="Add New Handloom Product"
+          subtitle="Fill in catalogue details, color swatches, and multi-angle photos"
+          size="3xl"
         >
-          <form onSubmit={handleCreateProduct} className="space-y-4">
+          <form onSubmit={handleCreateProduct} className="space-y-4 sm:space-y-5">
             <Input
               label="Product Title"
               required
@@ -1453,7 +1457,7 @@ function AdminDashboardContent() {
               onChange={(e) => setNewProductForm({ ...newProductForm, title: e.target.value })}
             />
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-xs font-semibold text-neutral-700 mb-1.5">Category</label>
                 <select
@@ -1476,7 +1480,7 @@ function AdminDashboardContent() {
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               <Input
                 label="MRP (₹)"
                 type="number"
@@ -1508,8 +1512,8 @@ function AdminDashboardContent() {
             {/* ========================================================== */}
             {/* 1. COLOR VARIANTS MANAGEMENT */}
             {/* ========================================================== */}
-            <div className="p-3.5 rounded-[8px] bg-neutral-50 border border-neutral-200 space-y-3">
-              <div className="flex items-center justify-between">
+            <div className="p-3 sm:p-4 rounded-[10px] bg-neutral-50 border border-neutral-200 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <label className="block text-xs font-bold text-neutral-800">
                     Product Color Variants ({newProductForm.colors.length})
@@ -1523,14 +1527,14 @@ function AdminDashboardContent() {
                   variant="outline"
                   size="sm"
                   onClick={() => handleAddColor("create")}
-                  className="h-7 text-xs flex items-center gap-1"
+                  className="h-8 text-xs flex items-center justify-center gap-1 self-start sm:self-auto"
                 >
-                  <Plus className="w-3 h-3" />
+                  <Plus className="w-3.5 h-3.5" />
                   <span>Add Color</span>
                 </Button>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {newProductForm.colors.map((color, cIdx) => {
                   const photoCount = newProductForm.images.filter(
                     (img) => img.colorName && img.colorName.toLowerCase() === color.name.toLowerCase()
@@ -1539,66 +1543,62 @@ function AdminDashboardContent() {
                   return (
                     <div
                       key={cIdx}
-                      className="flex flex-wrap items-center gap-2 p-2 bg-white rounded-[6px] border border-neutral-200"
+                      className="p-3 bg-white rounded-[8px] border border-neutral-200 space-y-2 sm:space-y-0 sm:flex sm:items-center sm:gap-3 shadow-xs"
                     >
-                      {/* Color Preview & Native Picker */}
-                      <div className="relative flex items-center">
+                      {/* Left Group: Color Picker + Name + Hex */}
+                      <div className="flex items-center gap-2 flex-1">
+                        <div className="relative flex-shrink-0">
+                          <input
+                            type="color"
+                            value={color.hexCode}
+                            onChange={(e) => handleColorChange(cIdx, "hexCode", e.target.value, "create")}
+                            className="w-8 h-8 p-0 border border-neutral-300 rounded cursor-pointer"
+                            title="Click to pick color"
+                          />
+                        </div>
                         <input
-                          type="color"
+                          type="text"
+                          placeholder="Color Name (e.g. Crimson Red)"
+                          value={color.name}
+                          onChange={(e) => handleColorChange(cIdx, "name", e.target.value, "create")}
+                          className="flex-1 min-w-[120px] h-9 px-2.5 text-xs bg-white border border-neutral-300 rounded focus:outline-none focus:border-brand-primary font-medium"
+                        />
+                        <input
+                          type="text"
+                          placeholder="#DC2626"
                           value={color.hexCode}
                           onChange={(e) => handleColorChange(cIdx, "hexCode", e.target.value, "create")}
-                          className="w-7 h-7 p-0 border border-neutral-300 rounded cursor-pointer"
-                          title="Click to pick color"
+                          className="w-20 h-9 px-2 text-xs font-mono bg-white border border-neutral-300 rounded focus:outline-none focus:border-brand-primary"
                         />
                       </div>
 
-                      {/* Color Name Input */}
-                      <input
-                        type="text"
-                        placeholder="Color Name (e.g. Crimson Red)"
-                        value={color.name}
-                        onChange={(e) => handleColorChange(cIdx, "name", e.target.value, "create")}
-                        className="flex-1 min-w-[130px] h-8 px-2.5 text-xs bg-white border border-neutral-300 rounded focus:outline-none focus:border-brand-primary font-medium"
-                      />
-
-                      {/* Color Hex Input */}
-                      <input
-                        type="text"
-                        placeholder="#DC2626"
-                        value={color.hexCode}
-                        onChange={(e) => handleColorChange(cIdx, "hexCode", e.target.value, "create")}
-                        className="w-20 h-8 px-2 text-xs font-mono bg-white border border-neutral-300 rounded focus:outline-none focus:border-brand-primary"
-                      />
-
-                      {/* Photo Count Tag */}
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600 font-medium">
-                        {photoCount} {photoCount === 1 ? "angle" : "angles"}
-                      </span>
-
-                      {/* Set as active upload target */}
-                      <button
-                        type="button"
-                        onClick={() => setSelectedUploadColor(color.name)}
-                        className={`text-[11px] px-2 py-1 rounded transition-colors ${
-                          selectedUploadColor === color.name
-                            ? "bg-brand-primary text-white font-semibold"
-                            : "bg-neutral-100 hover:bg-neutral-200 text-neutral-700"
-                        }`}
-                      >
-                        {selectedUploadColor === color.name ? "✓ Upload Target" : "Select for Upload"}
-                      </button>
-
-                      {/* Remove Color Button */}
-                      {newProductForm.colors.length > 1 && (
+                      {/* Right Group: Angle Badge + Upload Target Button + Delete Button */}
+                      <div className="flex items-center justify-between sm:justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-neutral-100">
+                        <span className="text-[11px] px-2.5 py-1 rounded-full bg-neutral-100 text-neutral-600 font-medium whitespace-nowrap">
+                          {photoCount} {photoCount === 1 ? "angle" : "angles"}
+                        </span>
                         <button
                           type="button"
-                          onClick={() => handleRemoveColor(cIdx, "create")}
-                          className="p-1 text-neutral-400 hover:text-red-600 rounded transition-colors"
-                          title="Remove color variant"
+                          onClick={() => setSelectedUploadColor(color.name)}
+                          className={`text-xs px-2.5 py-1.5 rounded transition-colors whitespace-nowrap ${
+                            selectedUploadColor === color.name
+                              ? "bg-brand-primary text-white font-semibold shadow-xs"
+                              : "bg-neutral-100 hover:bg-neutral-200 text-neutral-700"
+                          }`}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          {selectedUploadColor === color.name ? "✓ Target Color" : "Select for Upload"}
                         </button>
-                      )}
+                        {newProductForm.colors.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveColor(cIdx, "create")}
+                            className="p-1.5 text-neutral-400 hover:text-red-600 rounded transition-colors"
+                            title="Remove color variant"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -1608,7 +1608,7 @@ function AdminDashboardContent() {
             {/* ========================================================== */}
             {/* 2. MULTI-PHOTO UPLOAD & ANGLE SPECIFICATION */}
             {/* ========================================================== */}
-            <div className="space-y-3 p-3.5 rounded-[8px] bg-neutral-50 border border-neutral-200">
+            <div className="space-y-3 p-3 sm:p-4 rounded-[10px] bg-neutral-50 border border-neutral-200">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                 <div>
                   <label className="block text-xs font-bold text-neutral-800">
@@ -1621,14 +1621,14 @@ function AdminDashboardContent() {
               </div>
 
               {/* Upload Controls Bar */}
-              <div className="bg-white p-2.5 rounded-[6px] border border-neutral-200 space-y-2">
-                <div className="flex flex-wrap items-center gap-2 text-xs">
-                  <div className="flex items-center gap-1.5 flex-1 min-w-[200px]">
-                    <span className="font-semibold text-neutral-700 whitespace-nowrap">Target Color:</span>
+              <div className="bg-white p-3 rounded-[8px] border border-neutral-200 space-y-2.5 shadow-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-neutral-700 whitespace-nowrap text-xs">Target Color:</span>
                     <select
                       value={selectedUploadColor}
                       onChange={(e) => setSelectedUploadColor(e.target.value)}
-                      className="flex-1 h-8 px-2 bg-neutral-50 border border-neutral-300 rounded text-xs focus:outline-none focus:border-brand-primary"
+                      className="flex-1 h-9 px-2.5 bg-neutral-50 border border-neutral-300 rounded text-xs focus:outline-none focus:border-brand-primary font-medium"
                     >
                       <option value="">General / All Colors</option>
                       {newProductForm.colors.map((c, i) => (
@@ -1639,12 +1639,12 @@ function AdminDashboardContent() {
                     </select>
                   </div>
 
-                  <div className="flex items-center gap-1.5 flex-1 min-w-[180px]">
-                    <span className="font-semibold text-neutral-700 whitespace-nowrap">Angle Preset:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-neutral-700 whitespace-nowrap text-xs">Angle Preset:</span>
                     <select
                       value={selectedAngleLabel}
                       onChange={(e) => setSelectedAngleLabel(e.target.value)}
-                      className="flex-1 h-8 px-2 bg-neutral-50 border border-neutral-300 rounded text-xs focus:outline-none focus:border-brand-primary"
+                      className="flex-1 h-9 px-2.5 bg-neutral-50 border border-neutral-300 rounded text-xs focus:outline-none focus:border-brand-primary font-medium"
                     >
                       <option value="Front View">Front View</option>
                       <option value="Back View">Back View</option>
@@ -1656,10 +1656,10 @@ function AdminDashboardContent() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-neutral-100">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-neutral-100">
                   {/* File Upload Button (Multiple files enabled) */}
-                  <label className="flex items-center justify-center gap-2 p-2.5 border-2 border-dashed border-neutral-300 rounded-[6px] cursor-pointer hover:border-brand-primary bg-neutral-50/50 hover:bg-neutral-50 transition-colors">
-                    <Upload className="w-4 h-4 text-brand-primary" />
+                  <label className="flex items-center justify-center gap-2 p-3 border-2 border-dashed border-neutral-300 rounded-[8px] cursor-pointer hover:border-brand-primary bg-neutral-50/50 hover:bg-neutral-50 transition-colors min-h-[44px]">
+                    <Upload className="w-4 h-4 text-brand-primary flex-shrink-0" />
                     <span className="text-xs font-semibold text-neutral-700">
                       {isUploadingImage ? "Uploading photos..." : "Upload Photo(s) (Multi-Select)"}
                     </span>
@@ -1687,7 +1687,7 @@ function AdminDashboardContent() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleAddImageUrl("create")}
-                      className="whitespace-nowrap h-9 text-xs"
+                      className="whitespace-nowrap h-9 text-xs px-3"
                     >
                       Add URL
                     </Button>
@@ -1697,11 +1697,11 @@ function AdminDashboardContent() {
 
               {/* Multi-Angle Gallery Thumbnails with Angle & Color Editor */}
               {newProductForm.images.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 pt-1">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-3 pt-1">
                   {newProductForm.images.map((img, idx) => (
                     <div
                       key={idx}
-                      className={`relative flex flex-col rounded-[6px] overflow-hidden border-2 bg-white shadow-xs group ${
+                      className={`relative flex flex-col rounded-[8px] overflow-hidden border-2 bg-white shadow-xs group transition-shadow hover:shadow-md ${
                         img.isPrimary ? "border-brand-primary ring-1 ring-brand-primary" : "border-neutral-200"
                       }`}
                     >
@@ -1711,7 +1711,7 @@ function AdminDashboardContent() {
                           src={img.imageUrl}
                           alt={img.altText || `Angle ${idx + 1}`}
                           fill
-                          sizes="150px"
+                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                           className="object-cover"
                         />
 
@@ -1720,10 +1720,10 @@ function AdminDashboardContent() {
                           type="button"
                           onClick={() => handleSetPrimaryImage(idx, "create")}
                           title={img.isPrimary ? "Primary storefront image" : "Click to set as primary"}
-                          className={`absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 ${
+                          className={`absolute top-1.5 left-1.5 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 shadow-xs ${
                             img.isPrimary
                               ? "bg-brand-primary text-white"
-                              : "bg-neutral-900/60 text-neutral-300 hover:bg-neutral-900"
+                              : "bg-neutral-900/70 text-neutral-200 hover:bg-neutral-900"
                           }`}
                         >
                           <Star className="w-2.5 h-2.5" />
@@ -1735,28 +1735,28 @@ function AdminDashboardContent() {
                           type="button"
                           onClick={() => handleRemoveImage(idx, "create")}
                           title="Remove image"
-                          className="absolute top-1.5 right-1.5 p-1 rounded-full bg-red-600/80 text-white opacity-0 group-hover:opacity-100 hover:bg-red-700 transition-opacity"
+                          className="absolute top-1.5 right-1.5 p-1 rounded-full bg-red-600/90 text-white shadow-xs hover:bg-red-700 transition-colors"
                         >
-                          <Trash2 className="w-3 h-3" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
 
                       {/* Angle & Color Metadata Controls */}
-                      <div className="p-1.5 bg-neutral-50 border-t border-neutral-200 space-y-1">
+                      <div className="p-2 bg-neutral-50 border-t border-neutral-200 space-y-1.5">
                         {/* Angle / Alt Text Selector */}
                         <input
                           type="text"
-                          placeholder="Angle (e.g. Front View)"
+                          placeholder="Angle label (e.g. Front View)"
                           value={img.altText || ""}
                           onChange={(e) => handleUpdateImageAngle(idx, e.target.value, "create")}
-                          className="w-full h-6 px-1.5 text-[11px] bg-white border border-neutral-300 rounded focus:outline-none focus:border-brand-primary font-medium"
+                          className="w-full h-7 px-2 text-xs bg-white border border-neutral-300 rounded focus:outline-none focus:border-brand-primary font-medium"
                         />
 
                         {/* Color Mapping Selector */}
                         <select
                           value={img.colorName || ""}
                           onChange={(e) => handleUpdateImageColor(idx, e.target.value, "create")}
-                          className="w-full h-6 px-1 text-[10px] bg-white border border-neutral-300 rounded focus:outline-none focus:border-brand-primary font-semibold text-neutral-700"
+                          className="w-full h-7 px-1.5 text-[11px] bg-white border border-neutral-300 rounded focus:outline-none focus:border-brand-primary font-semibold text-neutral-700"
                         >
                           <option value="">General (All Colors)</option>
                           {newProductForm.colors.map((c, i) => (
@@ -1772,11 +1772,24 @@ function AdminDashboardContent() {
               )}
             </div>
 
-            <div className="pt-2 flex justify-end gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => setIsCreateModalOpen(false)}>
+            {/* Sticky Bottom Actions */}
+            <div className="sticky bottom-0 bg-white/95 backdrop-blur-xs border-t border-neutral-200 py-3 px-4 sm:px-6 -mx-4 sm:-mx-6 -mb-4 sm:-mb-5 flex items-center justify-end gap-3 z-20 shadow-xs">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsCreateModalOpen(false)}
+                className="px-4 h-9"
+              >
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" size="sm" isLoading={isSubmitting}>
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                isLoading={isSubmitting}
+                className="px-5 h-9 font-semibold"
+              >
                 Save Product
               </Button>
             </div>
@@ -1791,9 +1804,11 @@ function AdminDashboardContent() {
         <Modal
           isOpen={Boolean(editingProduct)}
           onClose={() => setEditingProduct(null)}
-          title={`Edit Product: ${editingProduct.title}`}
+          title={`Edit: ${editingProduct.title}`}
+          subtitle="Update product details, color swatches, and photo angles"
+          size="3xl"
         >
-          <form onSubmit={handleUpdateProduct} className="space-y-4">
+          <form onSubmit={handleUpdateProduct} className="space-y-4 sm:space-y-5">
             <Input
               label="Product Title"
               required
@@ -1801,7 +1816,7 @@ function AdminDashboardContent() {
               onChange={(e) => setEditingProduct({ ...editingProduct, title: e.target.value })}
             />
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-xs font-semibold text-neutral-700 mb-1.5">Category</label>
                 <select
@@ -1824,7 +1839,7 @@ function AdminDashboardContent() {
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               <Input
                 label="MRP (₹)"
                 type="number"
@@ -1854,8 +1869,8 @@ function AdminDashboardContent() {
             </div>
 
             {/* Colors in Edit Modal */}
-            <div className="p-3.5 rounded-[8px] bg-neutral-50 border border-neutral-200 space-y-3">
-              <div className="flex items-center justify-between">
+            <div className="p-3 sm:p-4 rounded-[10px] bg-neutral-50 border border-neutral-200 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <label className="block text-xs font-bold text-neutral-800">
                     Color Variants ({editingProduct.colors.length})
@@ -1867,67 +1882,78 @@ function AdminDashboardContent() {
                   variant="outline"
                   size="sm"
                   onClick={() => handleAddColor("edit")}
-                  className="h-7 text-xs flex items-center gap-1"
+                  className="h-8 text-xs flex items-center justify-center gap-1 self-start sm:self-auto"
                 >
-                  <Plus className="w-3 h-3" />
+                  <Plus className="w-3.5 h-3.5" />
                   <span>Add Color</span>
                 </Button>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {editingProduct.colors.map((color, cIdx) => (
                   <div
                     key={cIdx}
-                    className="flex flex-wrap items-center gap-2 p-2 bg-white rounded-[6px] border border-neutral-200"
+                    className="p-3 bg-white rounded-[8px] border border-neutral-200 space-y-2 sm:space-y-0 sm:flex sm:items-center sm:gap-3 shadow-xs"
                   >
-                    <input
-                      type="color"
-                      value={color.hexCode}
-                      onChange={(e) => handleColorChange(cIdx, "hexCode", e.target.value, "edit")}
-                      className="w-7 h-7 p-0 border border-neutral-300 rounded cursor-pointer"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Color Name"
-                      value={color.name}
-                      onChange={(e) => handleColorChange(cIdx, "name", e.target.value, "edit")}
-                      className="flex-1 min-w-[120px] h-8 px-2 text-xs bg-white border border-neutral-300 rounded font-medium"
-                    />
-                    <input
-                      type="text"
-                      placeholder="#HEX"
-                      value={color.hexCode}
-                      onChange={(e) => handleColorChange(cIdx, "hexCode", e.target.value, "edit")}
-                      className="w-20 h-8 px-2 text-xs font-mono bg-white border border-neutral-300 rounded"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setSelectedUploadColor(color.name)}
-                      className={`text-[11px] px-2 py-1 rounded transition-colors ${
-                        selectedUploadColor === color.name
-                          ? "bg-brand-primary text-white font-semibold"
-                          : "bg-neutral-100 hover:bg-neutral-200 text-neutral-700"
-                      }`}
-                    >
-                      {selectedUploadColor === color.name ? "✓ Upload Target" : "Select for Upload"}
-                    </button>
-                    {editingProduct.colors.length > 1 && (
+                    {/* Left Group: Color Picker + Name + Hex */}
+                    <div className="flex items-center gap-2 flex-1">
+                      <div className="relative flex-shrink-0">
+                        <input
+                          type="color"
+                          value={color.hexCode}
+                          onChange={(e) => handleColorChange(cIdx, "hexCode", e.target.value, "edit")}
+                          className="w-8 h-8 p-0 border border-neutral-300 rounded cursor-pointer"
+                          title="Click to pick color"
+                        />
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Color Name"
+                        value={color.name}
+                        onChange={(e) => handleColorChange(cIdx, "name", e.target.value, "edit")}
+                        className="flex-1 min-w-[120px] h-9 px-2.5 text-xs bg-white border border-neutral-300 rounded focus:outline-none focus:border-brand-primary font-medium"
+                      />
+                      <input
+                        type="text"
+                        placeholder="#HEX"
+                        value={color.hexCode}
+                        onChange={(e) => handleColorChange(cIdx, "hexCode", e.target.value, "edit")}
+                        className="w-20 h-9 px-2 text-xs font-mono bg-white border border-neutral-300 rounded focus:outline-none focus:border-brand-primary"
+                      />
+                    </div>
+
+                    {/* Right Group: Upload Target Button + Delete Button */}
+                    <div className="flex items-center justify-between sm:justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-neutral-100">
                       <button
                         type="button"
-                        onClick={() => handleRemoveColor(cIdx, "edit")}
-                        className="p-1 text-neutral-400 hover:text-red-600 rounded"
+                        onClick={() => setSelectedUploadColor(color.name)}
+                        className={`text-xs px-2.5 py-1.5 rounded transition-colors whitespace-nowrap ${
+                          selectedUploadColor === color.name
+                            ? "bg-brand-primary text-white font-semibold shadow-xs"
+                            : "bg-neutral-100 hover:bg-neutral-200 text-neutral-700"
+                        }`}
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        {selectedUploadColor === color.name ? "✓ Target Color" : "Select for Upload"}
                       </button>
-                    )}
+                      {editingProduct.colors.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveColor(cIdx, "edit")}
+                          className="p-1.5 text-neutral-400 hover:text-red-600 rounded transition-colors"
+                          title="Remove color variant"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Photos & Multi-Angle in Edit Modal */}
-            <div className="space-y-3 p-3.5 rounded-[8px] bg-neutral-50 border border-neutral-200">
-              <div className="flex items-center justify-between">
+            <div className="space-y-3 p-3 sm:p-4 rounded-[10px] bg-neutral-50 border border-neutral-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                 <div>
                   <label className="block text-xs font-bold text-neutral-800">
                     Product Photos ({editingProduct.images.length})
@@ -1937,14 +1963,14 @@ function AdminDashboardContent() {
               </div>
 
               {/* Upload Controls for Edit */}
-              <div className="bg-white p-2.5 rounded-[6px] border border-neutral-200 space-y-2">
-                <div className="flex flex-wrap items-center gap-2 text-xs">
-                  <div className="flex items-center gap-1.5 flex-1 min-w-[180px]">
-                    <span className="font-semibold text-neutral-700 whitespace-nowrap">Target Color:</span>
+              <div className="bg-white p-3 rounded-[8px] border border-neutral-200 space-y-2.5 shadow-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-neutral-700 whitespace-nowrap text-xs">Target Color:</span>
                     <select
                       value={selectedUploadColor}
                       onChange={(e) => setSelectedUploadColor(e.target.value)}
-                      className="flex-1 h-8 px-2 bg-neutral-50 border border-neutral-300 rounded text-xs"
+                      className="flex-1 h-9 px-2.5 bg-neutral-50 border border-neutral-300 rounded text-xs focus:outline-none focus:border-brand-primary font-medium"
                     >
                       <option value="">General / All Colors</option>
                       {editingProduct.colors.map((c, i) => (
@@ -1955,25 +1981,26 @@ function AdminDashboardContent() {
                     </select>
                   </div>
 
-                  <div className="flex items-center gap-1.5 flex-1 min-w-[160px]">
-                    <span className="font-semibold text-neutral-700 whitespace-nowrap">Angle Preset:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-neutral-700 whitespace-nowrap text-xs">Angle Preset:</span>
                     <select
                       value={selectedAngleLabel}
                       onChange={(e) => setSelectedAngleLabel(e.target.value)}
-                      className="flex-1 h-8 px-2 bg-neutral-50 border border-neutral-300 rounded text-xs"
+                      className="flex-1 h-9 px-2.5 bg-neutral-50 border border-neutral-300 rounded text-xs focus:outline-none focus:border-brand-primary font-medium"
                     >
                       <option value="Front View">Front View</option>
                       <option value="Back View">Back View</option>
                       <option value="Side / Border Angle">Side / Border Angle</option>
                       <option value="Texture / Weave Detail">Texture / Weave Detail</option>
                       <option value="Model Pose">Model Pose</option>
+                      <option value="Packaging / Folded">Packaging / Folded</option>
                     </select>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-neutral-100">
-                  <label className="flex items-center justify-center gap-2 p-2 border-2 border-dashed border-neutral-300 rounded-[6px] cursor-pointer hover:border-brand-primary bg-neutral-50/50 hover:bg-neutral-50 transition-colors">
-                    <Upload className="w-4 h-4 text-brand-primary" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-neutral-100">
+                  <label className="flex items-center justify-center gap-2 p-3 border-2 border-dashed border-neutral-300 rounded-[8px] cursor-pointer hover:border-brand-primary bg-neutral-50/50 hover:bg-neutral-50 transition-colors min-h-[44px]">
+                    <Upload className="w-4 h-4 text-brand-primary flex-shrink-0" />
                     <span className="text-xs font-semibold text-neutral-700">
                       {isUploadingImage ? "Uploading..." : "Upload Photo(s) (Multi-Select)"}
                     </span>
@@ -1993,14 +2020,14 @@ function AdminDashboardContent() {
                       placeholder="Paste image URL"
                       value={customImageUrlInput}
                       onChange={(e) => setCustomImageUrlInput(e.target.value)}
-                      className="flex-1 h-8 px-2.5 text-xs bg-white border border-neutral-300 rounded"
+                      className="flex-1 h-9 px-2.5 text-xs bg-white border border-neutral-300 rounded focus:outline-none focus:border-brand-primary"
                     />
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => handleAddImageUrl("edit")}
-                      className="whitespace-nowrap h-8 text-xs"
+                      className="whitespace-nowrap h-9 text-xs px-3"
                     >
                       Add URL
                     </Button>
@@ -2010,11 +2037,11 @@ function AdminDashboardContent() {
 
               {/* Edit Gallery Cards */}
               {editingProduct.images.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 pt-1">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-3 pt-1">
                   {editingProduct.images.map((img, idx) => (
                     <div
                       key={idx}
-                      className={`relative flex flex-col rounded-[6px] overflow-hidden border-2 bg-white shadow-xs group ${
+                      className={`relative flex flex-col rounded-[8px] overflow-hidden border-2 bg-white shadow-xs group transition-shadow hover:shadow-md ${
                         img.isPrimary ? "border-brand-primary ring-1 ring-brand-primary" : "border-neutral-200"
                       }`}
                     >
@@ -2023,16 +2050,16 @@ function AdminDashboardContent() {
                           src={img.imageUrl}
                           alt={img.altText || `Angle ${idx + 1}`}
                           fill
-                          sizes="150px"
+                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                           className="object-cover"
                         />
                         <button
                           type="button"
                           onClick={() => handleSetPrimaryImage(idx, "edit")}
-                          className={`absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 ${
+                          className={`absolute top-1.5 left-1.5 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 shadow-xs ${
                             img.isPrimary
                               ? "bg-brand-primary text-white"
-                              : "bg-neutral-900/60 text-neutral-300 hover:bg-neutral-900"
+                              : "bg-neutral-900/70 text-neutral-200 hover:bg-neutral-900"
                           }`}
                         >
                           <Star className="w-2.5 h-2.5" />
@@ -2041,24 +2068,24 @@ function AdminDashboardContent() {
                         <button
                           type="button"
                           onClick={() => handleRemoveImage(idx, "edit")}
-                          className="absolute top-1.5 right-1.5 p-1 rounded-full bg-red-600/80 text-white opacity-0 group-hover:opacity-100 hover:bg-red-700 transition-opacity"
+                          className="absolute top-1.5 right-1.5 p-1 rounded-full bg-red-600/90 text-white shadow-xs hover:bg-red-700 transition-colors"
                         >
-                          <Trash2 className="w-3 h-3" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
 
-                      <div className="p-1.5 bg-neutral-50 border-t border-neutral-200 space-y-1">
+                      <div className="p-2 bg-neutral-50 border-t border-neutral-200 space-y-1.5">
                         <input
                           type="text"
                           placeholder="Angle Label"
                           value={img.altText || ""}
                           onChange={(e) => handleUpdateImageAngle(idx, e.target.value, "edit")}
-                          className="w-full h-6 px-1.5 text-[11px] bg-white border border-neutral-300 rounded font-medium"
+                          className="w-full h-7 px-2 text-xs bg-white border border-neutral-300 rounded focus:outline-none focus:border-brand-primary font-medium"
                         />
                         <select
                           value={img.colorName || ""}
                           onChange={(e) => handleUpdateImageColor(idx, e.target.value, "edit")}
-                          className="w-full h-6 px-1 text-[10px] bg-white border border-neutral-300 rounded font-semibold text-neutral-700"
+                          className="w-full h-7 px-1.5 text-[11px] bg-white border border-neutral-300 rounded focus:outline-none focus:border-brand-primary font-semibold text-neutral-700"
                         >
                           <option value="">General (All Colors)</option>
                           {editingProduct.colors.map((c, i) => (
@@ -2074,11 +2101,24 @@ function AdminDashboardContent() {
               )}
             </div>
 
-            <div className="pt-2 flex justify-end gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => setEditingProduct(null)}>
+            {/* Sticky Bottom Actions */}
+            <div className="sticky bottom-0 bg-white/95 backdrop-blur-xs border-t border-neutral-200 py-3 px-4 sm:px-6 -mx-4 sm:-mx-6 -mb-4 sm:-mb-5 flex items-center justify-end gap-3 z-20 shadow-xs">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setEditingProduct(null)}
+                className="px-4 h-9"
+              >
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" size="sm" isLoading={isSubmitting}>
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                isLoading={isSubmitting}
+                className="px-5 h-9 font-semibold"
+              >
                 Save Changes
               </Button>
             </div>
