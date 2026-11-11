@@ -15,7 +15,7 @@ export default function AboutPage() {
           Preserving the Timeless Weave of India
         </h1>
         <p className="text-sm sm:text-base text-neutral-600 max-w-2xl mx-auto">
-          Born from a passion to honor rural artisan traditions, RA Heritage brings pure handspun textiles directly from traditional wooden pit looms into everyday modern life.
+          Born from a passion to honor rural artisan traditions, RA Universal brings pure handspun textiles directly from traditional wooden pit looms into everyday modern life.
         </p>
       </div>
 

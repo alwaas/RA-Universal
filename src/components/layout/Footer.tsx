@@ -45,7 +45,7 @@ export const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 py-10">
           <div>
             <span className="font-serif text-xl font-bold text-white tracking-tight">
-              RA Heritage Weaves
+              RA Universal
             </span>
             <p className="mt-3 text-xs text-neutral-400 leading-relaxed">
               Celebrating India&apos;s rich textile heritage. Bringing breathable Men&apos;s Gamchas and graceful Women&apos;s Dupattas & Scarves directly from the loom to your wardrobe.
@@ -116,7 +116,7 @@ export const Footer: React.FC = () => {
               Need assistance with product selection, wholesale inquiries, or custom orders?
             </p>
             <a
-              href="https://wa.me/919876543210"
+              href="https://wa.me/917388553867"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-3.5 py-2 bg-semantic-whatsapp text-white text-xs font-bold rounded hover:opacity-95 transition-opacity"
@@ -129,7 +129,7 @@ export const Footer: React.FC = () => {
 
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-neutral-800 text-center text-xs text-neutral-500">
-          <p>© {new Date().getFullYear()} RA Heritage Weaves. Handcrafted in India. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} RA Universal. Handcrafted in India. All rights reserved.</p>
         </div>
       </div>
     </footer>

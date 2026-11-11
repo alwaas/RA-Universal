@@ -281,7 +281,7 @@ ra-universal/
       └─► 2. Client launches formatted WhatsApp Click-to-Chat URL
                 │
                 ▼
-          Target: https://wa.me/919876543210?text=Namaste%20RA%20Weaves...
+          Target: https://wa.me/917388553867?text=Namaste%20RA%20Weaves...
           (Opens WhatsApp App or Web with order summary pre-filled)
 ```
 
@@ -592,7 +592,7 @@ interface ApiErrorResponse {
       "user": {
         "id": "c7a8b9e0-1234-4567-890a-bcdef0123456",
         "fullName": "Priya Sharma",
-        "phone": "9876543210",
+        "phone": "7388553867",
         "email": "priya@example.com",
         "role": "customer"
       }
@@ -808,10 +808,10 @@ NODE_ENV="production"
 NEXT_PUBLIC_APP_URL="https://ra-weaves.vercel.app"
 
 # Client Official WhatsApp Business Number (Without + or spaces, e.g. 91XXXXXXXXXX)
-NEXT_PUBLIC_WHATSAPP_PHONE="919876543210"
+NEXT_PUBLIC_WHATSAPP_PHONE="917388553867"
 
 # Store Brand Name for Prompts & WhatsApp Message Templates
-NEXT_PUBLIC_BRAND_NAME="RA Heritage Weaves"
+NEXT_PUBLIC_BRAND_NAME="RA Universal"
 ```
 
 ---

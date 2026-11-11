@@ -145,7 +145,7 @@ it("Cart WhatsApp Protocol", "Buy Now intercept URL generation formats parameter
       { title: "Kolkata Cotton Gamcha", color: "Indigo", quantity: 2, price: 299 },
     ],
     customerName: "Vikram Sengupta",
-    customerPhone: "9876543210",
+    customerPhone: "7388553867",
     city: "Kolkata",
   });
 
@@ -239,7 +239,7 @@ it("RBAC Ownership", "Owner and Admin allowed, unrelated customer forbidden", ()
     userId: "user-alpha",
     role: "customer",
     fullName: "Alpha",
-    phone: "9876543210",
+    phone: "7388553867",
   };
 
   const otherUser: SessionUser = {
@@ -282,7 +282,7 @@ it("Input Boundaries", "Zod schemas reject invalid phone, price, and empty login
   // 2. Short password
   const passRes = signupSchema.safeParse({
     fullName: "Test",
-    phone: "9876543210",
+    phone: "7388553867",
     password: "123", // Under 6 characters
   });
   if (passRes.success) throw new Error("Accepted short password");
@@ -317,7 +317,7 @@ it("B2B Enquiry", "Validates required business lead fields", () => {
     fullName: "Sanjay Singhal",
     businessName: "Singhal Handlooms Pvt Ltd",
     gstin: "19ABCDE1234F1Z5",
-    phone: "9876543210",
+    phone: "7388553867",
     email: "sanjay@singhal.com",
     estimatedVolume: "100-500",
     message: "Requirement for 300 pieces of Sambalpuri dupattas.",

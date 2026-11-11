@@ -16,8 +16,8 @@ export interface WhatsAppOrderDetails {
  * Builds a pre-filled click-to-chat WhatsApp link with formatted order summary.
  */
 export function generateWhatsAppOrderUrl(details: WhatsAppOrderDetails): string {
-  const phone = process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "919876543210";
-  const brandName = process.env.NEXT_PUBLIC_BRAND_NAME || "RA Heritage Weaves";
+  const phone = process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "917388553867";
+  const brandName = process.env.NEXT_PUBLIC_BRAND_NAME || "RA Universal";
 
   const totalAmount = details.items.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -50,8 +50,8 @@ export function generateWhatsAppOrderUrl(details: WhatsAppOrderDetails): string 
  * Builds a direct general enquiry link for WhatsApp.
  */
 export function generateWhatsAppEnquiryUrl(subject: string): string {
-  const phone = process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "919876543210";
-  const brandName = process.env.NEXT_PUBLIC_BRAND_NAME || "RA Heritage Weaves";
+  const phone = process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "917388553867";
+  const brandName = process.env.NEXT_PUBLIC_BRAND_NAME || "RA Universal";
 
   const message = `Namaste ${brandName},\nI have an enquiry regarding: ${subject}.\nPlease assist me.`;
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;

@@ -39,7 +39,7 @@ export const Header: React.FC = () => {
 
           <Link href="/" className="flex items-center gap-2">
             <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-brand-primary">
-              RA Heritage
+              RA Universal
             </span>
           </Link>
         </div>

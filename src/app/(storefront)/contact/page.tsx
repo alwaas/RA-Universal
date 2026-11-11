@@ -76,7 +76,7 @@ export default function ContactPage() {
               Fastest way to get answers on product sizing, color verification, and shipping tracking.
             </p>
             <a
-              href="https://wa.me/919876543210"
+              href="https://wa.me/917388553867"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-semantic-whatsapp text-white text-xs font-bold rounded hover:opacity-95 transition-opacity"
@@ -92,7 +92,7 @@ export default function ContactPage() {
               <Phone className="w-4 h-4 text-brand-primary flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold text-neutral-900">Customer Helpline</p>
-                <p className="text-neutral-600">+91 98765 43210</p>
+                <p className="text-neutral-600">+91 73885 53867</p>
               </div>
             </div>
 
@@ -100,7 +100,7 @@ export default function ContactPage() {
               <Mail className="w-4 h-4 text-brand-primary flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold text-neutral-900">Email Address</p>
-                <p className="text-neutral-600">care@ra-heritage.in</p>
+                <p className="text-neutral-600">care@ra-universal.in</p>
               </div>
             </div>
 
@@ -116,7 +116,7 @@ export default function ContactPage() {
               <MapPin className="w-4 h-4 text-brand-primary flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold text-neutral-900">Registered Office</p>
-                <p className="text-neutral-600">Handloom Complex, Park Street, Kolkata, West Bengal - 700016</p>
+                <p className="text-neutral-600">Tanda, Ambedkar Nagar U.P. - 224190</p>
               </div>
             </div>
           </div>
@@ -160,7 +160,7 @@ export default function ContactPage() {
                 <Input
                   label="Phone Number"
                   required
-                  placeholder="e.g. 9876543210"
+                  placeholder="e.g. 7388553867"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 />

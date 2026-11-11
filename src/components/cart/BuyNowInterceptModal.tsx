@@ -88,7 +88,7 @@ export const BuyNowInterceptModal: React.FC<BuyNowInterceptModalProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <Input
               label="WhatsApp Phone (Optional)"
-              placeholder="e.g. 9876543210"
+              placeholder="e.g. 7388553867"
               value={customerPhone}
               onChange={(e) => setCustomerPhone(e.target.value)}
             />

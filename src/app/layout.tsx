@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "RA Heritage Weaves | Handcrafted Scarves, Dupattas & Gamchas",
+  title: "RA Universal | Handcrafted Scarves, Dupattas & Gamchas",
   description:
     "Authentic Indian ethnic handloom textiles. Shop breathable Men's Cotton Gamchas and luxurious Women's Dupattas & Scarves directly from regional weaver clusters.",
 };

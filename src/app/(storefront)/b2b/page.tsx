@@ -177,7 +177,7 @@ export default function B2BPage() {
               <Input
                 label="WhatsApp Phone Number"
                 required
-                placeholder="e.g. 9876543210"
+                placeholder="e.g. 7388553867"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               />
@@ -263,7 +263,7 @@ export default function B2BPage() {
               </Button>
 
               <a
-                href="https://wa.me/919876543210?text=Namaste%2C%20I%20am%20interested%20in%20B2B%20wholesale%20supply%20of%20handloom%20gamchas%20and%20dupattas."
+                href="https://wa.me/917388553867?text=Namaste%2C%20I%20am%20interested%20in%20B2B%20wholesale%20supply%20of%20handloom%20gamchas%20and%20dupattas."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 px-5 py-3 bg-semantic-whatsapp hover:opacity-95 text-white font-bold text-sm rounded-[6px] transition-opacity"

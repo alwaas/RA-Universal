@@ -100,7 +100,7 @@ function LoginForm() {
         <Input
           label="Phone Number or Email"
           required
-          placeholder="e.g. 9876543210 or user@example.com"
+          placeholder="e.g. 7388553867 or user@example.com"
           value={identifier}
           onChange={(e) => setIdentifier(e.target.value)}
         />

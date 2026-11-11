@@ -49,10 +49,10 @@ Create `.env.local` or configure production hosting environment variables:
 | `PORT` | Optional | Web server port | `3000` |
 | `DATABASE_URL` | Yes | PostgreSQL connection string | `postgresql://user:pass@host:5432/dbname?sslmode=require` |
 | `JWT_SECRET` | Yes | 32+ character secret for JWT sessions | Random 64-char hex string |
-| `ADMIN_DEFAULT_PHONE` | Yes | Initial admin phone for bootstrap | `9876543210` |
+| `ADMIN_DEFAULT_PHONE` | Yes | Initial admin phone for bootstrap | `7388553867` |
 | `ADMIN_EMAIL` | Yes | Initial admin email | `admin@rauniversal.com` |
 | `ADMIN_DEFAULT_PASSWORD` | Yes | Strong initial admin password | Min 8 chars with upper, digit, symbol |
-| `NEXT_PUBLIC_WHATSAPP_PHONE` | Yes | WhatsApp Business order line | `919876543210` |
+| `NEXT_PUBLIC_WHATSAPP_PHONE` | Yes | WhatsApp Business order line | `917388553867` |
 | `NEXT_PUBLIC_APP_URL` | Yes | Canonical site URL | `https://rauniversal.com` |
 | `ENABLE_DEMO_FALLBACK` | No | Allow in-memory fallback during DB outage | `false` (default in prod) |
 | `SEED_DEMO_DATA` | No | Seed 8 demo products during migration | `false` |

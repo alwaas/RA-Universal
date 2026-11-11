@@ -44,7 +44,7 @@ async function runBackendTests() {
     userId: "cust-uuid-456",
     role: "customer",
     fullName: "Priya Sharma",
-    phone: "9876543210",
+    phone: "7388553867",
     email: "priya@example.com",
   };
 
@@ -106,7 +106,7 @@ async function runBackendTests() {
   assert(
     signupSchema.safeParse({
       fullName: "Ananya Roy",
-      phone: "9876543210",
+      phone: "7388553867",
       password: "pass", // Under 6 characters
     }).success === false,
     "Password under 6 characters rejected by signup validation"
@@ -136,7 +136,7 @@ async function runBackendTests() {
     "Empty login identifier rejected"
   );
   assert(
-    loginSchema.safeParse({ identifier: "9876543210", password: "" }).success === false,
+    loginSchema.safeParse({ identifier: "7388553867", password: "" }).success === false,
     "Empty login password rejected"
   );
 
@@ -175,7 +175,7 @@ async function runBackendTests() {
       type: "b2b",
       fullName: "Textile Buyer",
       businessName: "Kashi Weaves",
-      phone: "9876543210",
+      phone: "7388553867",
       estimatedVolume: "100-500",
       message: "Bulk order inquiry for Dupattas.",
     }).success === true,

@@ -96,7 +96,7 @@ function SignupForm() {
         <Input
           label="Phone Number (10 digits)"
           required
-          placeholder="e.g. 9876543210"
+          placeholder="e.g. 7388553867"
           value={formData.phone}
           error={fieldErrors.phone?.[0]}
           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
