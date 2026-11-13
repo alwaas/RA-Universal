@@ -1,0 +1,201 @@
+[
+  {
+    "id": "ord-1794545758796",
+    "orderNumber": "RA-ORD-75879696",
+    "userId": null,
+    "customerName": "QA Customer Test",
+    "customerPhone": "9876543210",
+    "customerEmail": "orderqa@example.com",
+    "shippingAddress": "Plot 42, Handloom Park",
+    "shippingCity": "Varanasi",
+    "shippingState": "Uttar Pradesh",
+    "shippingPincode": "221001",
+    "totalAmount": 999,
+    "mrpTotal": 1999,
+    "savingsTotal": 1000,
+    "orderStatus": "shipped",
+    "paymentStatus": "pending_whatsapp",
+    "items": [
+      {
+        "productId": "prod-01",
+        "sku": "RA-GAM-001",
+        "title": "Classic Bengal Cotton Gamcha",
+        "colorName": "Traditional Red",
+        "quantity": 2,
+        "sellingPrice": 199,
+        "mrp": 399
+      }
+    ],
+    "notes": null,
+    "createdAt": "2026-11-13T04:55:58.796Z",
+    "updatedAt": "2026-11-13T04:55:58.809Z"
+  },
+  {
+    "id": "ord-1794497192901",
+    "orderNumber": "RA-ORD-19290130",
+    "userId": null,
+    "customerName": "QA Customer Test",
+    "customerPhone": "9876543210",
+    "customerEmail": "orderqa@example.com",
+    "shippingAddress": "Plot 42, Handloom Park",
+    "shippingCity": "Varanasi",
+    "shippingState": "Uttar Pradesh",
+    "shippingPincode": "221001",
+    "totalAmount": 999,
+    "mrpTotal": 1999,
+    "savingsTotal": 1000,
+    "orderStatus": "shipped",
+    "paymentStatus": "pending_whatsapp",
+    "items": [
+      {
+        "productId": "prod-01",
+        "sku": "RA-GAM-001",
+        "title": "Classic Bengal Cotton Gamcha",
+        "colorName": "Traditional Red",
+        "quantity": 2,
+        "sellingPrice": 199,
+        "mrp": 399
+      }
+    ],
+    "notes": null,
+    "createdAt": "2026-11-12T15:26:32.901Z",
+    "updatedAt": "2026-11-12T15:26:32.907Z"
+  },
+  {
+    "id": "ord-1794497145789",
+    "orderNumber": "RA-ORD-14578990",
+    "userId": null,
+    "customerName": "QA Customer Test",
+    "customerPhone": "9876543210",
+    "customerEmail": "orderqa@example.com",
+    "shippingAddress": "Plot 42, Handloom Park",
+    "shippingCity": "Varanasi",
+    "shippingState": "Uttar Pradesh",
+    "shippingPincode": "221001",
+    "totalAmount": 999,
+    "mrpTotal": 1999,
+    "savingsTotal": 1000,
+    "orderStatus": "shipped",
+    "paymentStatus": "pending_whatsapp",
+    "items": [
+      {
+        "productId": "prod-01",
+        "sku": "RA-GAM-001",
+        "title": "Classic Bengal Cotton Gamcha",
+        "colorName": "Traditional Red",
+        "quantity": 2,
+        "sellingPrice": 199,
+        "mrp": 399
+      }
+    ],
+    "notes": null,
+    "createdAt": "2026-11-12T15:25:45.789Z",
+    "updatedAt": "2026-11-12T15:25:45.795Z"
+  },
+  {
+    "id": "ord-demo-1001",
+    "orderNumber": "RA-ORD-910241",
+    "userId": null,
+    "customerName": "Ananya Mukherjee",
+    "customerPhone": "9830123456",
+    "customerEmail": "ananya.m@example.com",
+    "shippingAddress": "Flat 4B, Shantiniketan Enclave, Gariahat",
+    "shippingCity": "Kolkata",
+    "shippingState": "West Bengal",
+    "shippingPincode": "700019",
+    "totalAmount": 1198,
+    "mrpTotal": 2398,
+    "savingsTotal": 1200,
+    "orderStatus": "confirmed",
+    "paymentStatus": "paid",
+    "items": [
+      {
+        "productId": "prod-04",
+        "sku": "RA-DUP-004",
+        "title": "Chanderi Silk Golden Zari Border Women's Dupatta",
+        "colorName": "Royal Magenta",
+        "quantity": 1,
+        "sellingPrice": 899,
+        "mrp": 1799,
+        "imageUrl": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800"
+      },
+      {
+        "productId": "prod-01",
+        "sku": "RA-GAM-001",
+        "title": "Classic Bengal Cotton Gamcha - Heritage Red Check",
+        "colorName": "Traditional Red",
+        "quantity": 1,
+        "sellingPrice": 199,
+        "mrp": 399,
+        "imageUrl": "https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=800"
+      }
+    ],
+    "notes": "Please pack for gift delivery",
+    "createdAt": "2026-11-12T13:25:45.138Z",
+    "updatedAt": "2026-11-12T13:25:45.138Z"
+  },
+  {
+    "id": "ord-demo-1002",
+    "orderNumber": "RA-ORD-910242",
+    "userId": null,
+    "customerName": "Vikramaditya Roy",
+    "customerPhone": "9820543210",
+    "customerEmail": "vikram.roy@example.com",
+    "shippingAddress": "House 12, Indiranagar 2nd Stage",
+    "shippingCity": "Bengaluru",
+    "shippingState": "Karnataka",
+    "shippingPincode": "560038",
+    "totalAmount": 558,
+    "mrpTotal": 998,
+    "savingsTotal": 440,
+    "orderStatus": "pending",
+    "paymentStatus": "pending_whatsapp",
+    "items": [
+      {
+        "productId": "prod-02",
+        "sku": "RA-GAM-002",
+        "title": "Sambalpuri Handloom Pure Cotton Men's Gamcha",
+        "colorName": "Maroon & Black",
+        "quantity": 2,
+        "sellingPrice": 279,
+        "mrp": 499,
+        "imageUrl": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800"
+      }
+    ],
+    "notes": "WhatsApp confirmation awaited",
+    "createdAt": "2026-11-12T09:25:45.138Z",
+    "updatedAt": "2026-11-12T09:25:45.138Z"
+  },
+  {
+    "id": "ord-demo-1003",
+    "orderNumber": "RA-ORD-910243",
+    "userId": null,
+    "customerName": "Pooja Deshmukh",
+    "customerPhone": "9765432109",
+    "customerEmail": "pooja.d@example.com",
+    "shippingAddress": "Sector 14, Vashi",
+    "shippingCity": "Navi Mumbai",
+    "shippingState": "Maharashtra",
+    "shippingPincode": "400703",
+    "totalAmount": 1099,
+    "mrpTotal": 1999,
+    "savingsTotal": 900,
+    "orderStatus": "shipped",
+    "paymentStatus": "paid",
+    "items": [
+      {
+        "productId": "prod-06",
+        "sku": "RA-DUP-006",
+        "title": "Amritsari Phulkari Embroidered Festive Dupatta",
+        "colorName": "Festive Red",
+        "quantity": 1,
+        "sellingPrice": 1099,
+        "mrp": 1999,
+        "imageUrl": "https://images.unsplash.com/photo-1610030469668-93510cb67655?w=800"
+      }
+    ],
+    "notes": "Courier dispatched via Express Handloom Cargo",
+    "createdAt": "2026-11-11T15:25:45.138Z",
+    "updatedAt": "2026-11-12T03:25:45.138Z"
+  }
+]

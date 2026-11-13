@@ -139,9 +139,9 @@ function AdminLoginForm() {
       </form>
 
       <div className="p-3.5 bg-brand-secondary border border-neutral-200 rounded-[8px] text-xs text-neutral-700 space-y-1">
-        <p className="font-bold text-neutral-900">Demo Administrative Credentials:</p>
+        <p className="font-bold text-neutral-900">Administrative Login Credentials:</p>
         <p>
-          Identifier: <span className="font-mono font-semibold text-neutral-900">9999999999</span> (or <span className="font-mono font-semibold text-neutral-900">admin@rauniversal.in</span>)
+          Phone / Email: <span className="font-mono font-semibold text-neutral-900">9335159036</span>, <span className="font-mono font-semibold text-neutral-900">9999999999</span>, or <span className="font-mono font-semibold text-neutral-900">admin@rauniversal.in</span>
         </p>
         <p>
           Password: <span className="font-mono font-semibold text-neutral-900">SuperSecureAdminPassword2026!</span>

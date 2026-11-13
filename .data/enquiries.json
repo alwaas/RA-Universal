@@ -1,0 +1,44 @@
+[
+  {
+    "id": "enq-1794501093004",
+    "type": "b2b",
+    "fullName": "abc",
+    "businessName": "xyz",
+    "gstin": null,
+    "phone": "9911111111",
+    "email": "abc@xyz.com",
+    "estimatedVolume": "50-100",
+    "message": "Urgent Call Us",
+    "status": "new",
+    "createdAt": "2026-11-12T16:31:33.004Z",
+    "updatedAt": "2026-11-12T16:31:33.004Z"
+  },
+  {
+    "id": "enq-demo-1001",
+    "type": "b2b",
+    "fullName": "Virendra Singhania",
+    "businessName": "Singhania Handlooms & Textiles Pvt Ltd",
+    "gstin": "07AAAAA0000A1Z5",
+    "phone": "9811223344",
+    "email": "virendra@singhaniatextiles.com",
+    "estimatedVolume": "500 - 1000 pieces (Varanasi Silk Dupattas)",
+    "message": "Seeking wholesale procurement catalog with bulk discounts for Diwali retail distribution in North India.",
+    "status": "new",
+    "createdAt": "2026-11-12T12:25:45.127Z",
+    "updatedAt": "2026-11-12T12:25:45.127Z"
+  },
+  {
+    "id": "enq-demo-1002",
+    "type": "b2b",
+    "fullName": "Priyanka Kulkarni",
+    "businessName": "Sanskriti Ethnic Boutique",
+    "gstin": "27BBBPS1234F1Z2",
+    "phone": "9766554433",
+    "email": "orders@sanskrithaboutique.in",
+    "estimatedVolume": "200 pieces (Bengal Cotton & Sambalpuri Gamchas)",
+    "message": "Need assorted color lots of pure handloom gamchas for our stores in Pune and Mumbai.",
+    "status": "contacted",
+    "createdAt": "2026-11-11T19:25:45.127Z",
+    "updatedAt": "2026-11-11T19:25:45.127Z"
+  }
+]

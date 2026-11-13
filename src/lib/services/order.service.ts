@@ -1,7 +1,10 @@
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { orders } from "@/db/schema";
+import { PersistentStore } from "@/lib/storage/persistentStore";
 import type { Order, OrderStatus, PaymentStatus, OrderItem } from "@/types";
+
+const STORAGE_KEY = "orders.json";
 
 export interface CreateOrderInput {
   userId?: string | null;
@@ -129,6 +132,19 @@ const inMemoryOrders: Order[] = [
   },
 ];
 
+function getStoredOrders(): Order[] {
+  const fromDisk = PersistentStore.readJson<Order[]>(STORAGE_KEY);
+  if (fromDisk && Array.isArray(fromDisk) && fromDisk.length > 0) {
+    return fromDisk;
+  }
+  PersistentStore.writeJson(STORAGE_KEY, inMemoryOrders);
+  return [...inMemoryOrders];
+}
+
+function saveStoredOrders(ords: Order[]): void {
+  PersistentStore.writeJson(STORAGE_KEY, ords);
+}
+
 export class OrderService {
   /**
    * Generates a customer-facing Amazon-style order number.
@@ -172,7 +188,7 @@ export class OrderService {
           .returning();
 
         if (created) {
-          return {
+          const ord: Order = {
             id: created.id,
             orderNumber: created.orderNumber,
             userId: created.userId,
@@ -193,9 +209,13 @@ export class OrderService {
             createdAt: created.createdAt.toISOString(),
             updatedAt: created.updatedAt.toISOString(),
           };
+
+          const current = getStoredOrders();
+          saveStoredOrders([ord, ...current.filter((o) => o.id !== ord.id)]);
+          return ord;
         }
       } catch (err) {
-        console.warn("[OrderService] DB insert failed, falling back to in-memory:", err);
+        console.warn("[OrderService] DB insert failed, using persistent storage:", err);
       }
     }
 
@@ -221,7 +241,8 @@ export class OrderService {
       updatedAt: new Date().toISOString(),
     };
 
-    inMemoryOrders.unshift(newOrder);
+    const current = getStoredOrders();
+    saveStoredOrders([newOrder, ...current.filter((o) => o.id !== newOrder.id)]);
     return newOrder;
   }
 
@@ -229,6 +250,7 @@ export class OrderService {
    * Retrieves all orders for administrative tracking.
    */
   static async getOrders(): Promise<Order[]> {
+    const fileList = getStoredOrders();
     if (db) {
       try {
         const raw = await db.query.orders.findMany({
@@ -236,7 +258,7 @@ export class OrderService {
         });
 
         if (raw && raw.length > 0) {
-          return raw.map((o) => ({
+          const dbOrders: Order[] = raw.map((o) => ({
             id: o.id,
             orderNumber: o.orderNumber,
             userId: o.userId,
@@ -257,13 +279,94 @@ export class OrderService {
             createdAt: o.createdAt.toISOString(),
             updatedAt: o.updatedAt.toISOString(),
           }));
+
+          const map = new Map<string, Order>();
+          for (const ord of fileList) {
+            map.set(ord.id, ord);
+          }
+          for (const ord of dbOrders) {
+            map.set(ord.id, ord);
+          }
+          return Array.from(map.values()).sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
         }
       } catch (err) {
-        console.warn("[OrderService] DB fetch failed, using in-memory:", err);
+        console.warn("[OrderService] DB fetch failed, using persistent storage:", err);
       }
     }
 
-    return [...inMemoryOrders];
+    return fileList;
+  }
+
+  /**
+   * Retrieves orders belonging to a specific customer (by userId, phone, or email).
+   */
+  static async getOrdersForCustomer({
+    userId,
+    phone,
+    email,
+  }: {
+    userId?: string;
+    phone?: string;
+    email?: string;
+  }): Promise<Order[]> {
+    const cleanPhone = phone?.replace(/[^0-9]/g, "").slice(-10);
+
+    if (db) {
+      try {
+        const conditions = [];
+        if (userId) conditions.push(eq(orders.userId, userId));
+        if (cleanPhone) conditions.push(sql`${orders.customerPhone} LIKE ${`%${cleanPhone}`}`);
+        if (email) conditions.push(eq(orders.customerEmail, email));
+
+        if (conditions.length > 0) {
+          const raw = await db.query.orders.findMany({
+            where: or(...conditions),
+            orderBy: [desc(orders.createdAt)],
+          });
+
+          if (raw && raw.length > 0) {
+            return raw.map((o) => ({
+              id: o.id,
+              orderNumber: o.orderNumber,
+              userId: o.userId,
+              customerName: o.customerName,
+              customerPhone: o.customerPhone,
+              customerEmail: o.customerEmail,
+              shippingAddress: o.shippingAddress,
+              shippingCity: o.shippingCity,
+              shippingState: o.shippingState,
+              shippingPincode: o.shippingPincode,
+              totalAmount: Number(o.totalAmount),
+              mrpTotal: Number(o.mrpTotal),
+              savingsTotal: Number(o.savingsTotal),
+              orderStatus: o.orderStatus as OrderStatus,
+              paymentStatus: o.paymentStatus as PaymentStatus,
+              items: (o.itemsJson as OrderItem[]) || [],
+              notes: o.notes,
+              createdAt: o.createdAt.toISOString(),
+              updatedAt: o.updatedAt.toISOString(),
+            }));
+          }
+        }
+      } catch (err) {
+        console.warn("[OrderService] DB getOrdersForCustomer failed, using persistent storage:", err);
+      }
+    }
+
+    // Resilient fallback
+    return getStoredOrders().filter((o) => {
+      if (userId && o.userId === userId) return true;
+      if (cleanPhone) {
+        const oPhone = o.customerPhone.replace(/[^0-9]/g, "").slice(-10);
+        if (oPhone === cleanPhone) return true;
+      }
+      if (email && o.customerEmail && o.customerEmail.toLowerCase() === email.toLowerCase()) {
+        return true;
+      }
+      return false;
+    });
   }
 
   /**
@@ -281,17 +384,18 @@ export class OrderService {
         if (paymentStatus) updateData.paymentStatus = paymentStatus;
 
         await db.update(orders).set(updateData).where(eq(orders.id, orderId));
-        return true;
       } catch (err) {
         console.warn("[OrderService] DB status update failed:", err);
       }
     }
 
-    const order = inMemoryOrders.find((o) => o.id === orderId || o.orderNumber === orderId);
+    const current = getStoredOrders();
+    const order = current.find((o) => o.id === orderId || o.orderNumber === orderId);
     if (order) {
       if (status) order.orderStatus = status;
       if (paymentStatus) order.paymentStatus = paymentStatus;
       order.updatedAt = new Date().toISOString();
+      saveStoredOrders(current);
       return true;
     }
 

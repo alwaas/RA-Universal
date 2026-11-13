@@ -184,15 +184,16 @@ async function runBackendTests() {
 
   // 5. End-to-End AuthService Lifecycle (Registration, Login, RBAC)
   console.log("\n[5] AuthService Registration & Login Flow:");
-  const testPhone = "7777777777";
+  const testPhone = "7" + Math.floor(100000000 + Math.random() * 900000000).toString();
   const testPass = "MyCustomerSecret123";
+  const testEmail = `meera_${Date.now()}@example.com`;
 
   // Register new customer
   const regResult = await AuthService.registerCustomer({
     fullName: "Meera Sen",
     phone: testPhone,
     password: testPass,
-    email: "meera@example.com",
+    email: testEmail,
   });
   assert(regResult.user.fullName === "Meera Sen", "Customer account registered successfully");
   assert(regResult.user.role === "customer", "New user has customer role by default");

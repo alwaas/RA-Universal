@@ -7,6 +7,8 @@ import { createSessionToken, verifyJwtSession } from "../auth/session";
 import { requireResourceOwnership } from "../auth/rbac";
 import { AuthService } from "../services/auth.service";
 import { OfferService } from "../services/offer.service";
+import { EnquiryService } from "../services/enquiry.service";
+import { OrderService } from "../services/order.service";
 import seedProductsData from "@/data/seedProducts.json";
 import type { Product, CartItem, SessionUser } from "@/types";
 
@@ -163,8 +165,10 @@ it("Cart WhatsApp Protocol", "Buy Now intercept URL generation formats parameter
 // ============================================================================
 // 4. CUSTOMER & ADMIN AUTHENTICATION TESTS
 // ============================================================================
+const testCustomerPhone = "9" + Math.floor(100000000 + Math.random() * 900000000).toString();
+
 it("Customer Auth", "Customer registration validates 10-digit Indian mobile and hashes password", async () => {
-  const phone = "9123456789";
+  const phone = testCustomerPhone;
   const pass = "ValidPassword123";
 
   const { user, token } = await AuthService.registerCustomer({
@@ -192,7 +196,7 @@ it("Customer Auth", "Rejects duplicate phone registration", async () => {
   try {
     await AuthService.registerCustomer({
       fullName: "Duplicate User",
-      phone: "9123456789", // Already registered above
+      phone: testCustomerPhone, // Already registered above
       password: "AnotherPassword123",
     });
   } catch {
@@ -334,6 +338,99 @@ it("B2B Enquiry", "Validates required business lead fields", () => {
   });
   if (invalid.success) {
     throw new Error("Accepted invalid B2B enquiry with empty fields");
+  }
+});
+
+// ============================================================================
+// 8. REAL-TIME PERSISTENT ENQUIRY & ORDER LIFECYCLE
+// ============================================================================
+it("Enquiry Persistence", "Creates, retrieves, updates status, and deletes enquiries", async () => {
+  const created = await EnquiryService.createEnquiry({
+    type: "b2b",
+    fullName: "QA Tester Varanasi Handlooms",
+    businessName: "Kashi Weaves Co",
+    gstin: "09ABCDE1234F1Z5",
+    phone: "9876543210",
+    email: "qa@kashiweaves.com",
+    estimatedVolume: "100-500",
+    message: "Urgent wholesale quotation requested for handloom silk stoles.",
+  });
+
+  if (!created.id || created.status !== "new") {
+    throw new Error("Enquiry creation did not return valid record with new status");
+  }
+
+  // Verify retrieval
+  const all = await EnquiryService.getEnquiries();
+  const found = all.find((e) => e.id === created.id);
+  if (!found) {
+    throw new Error("Created enquiry was not found in getEnquiries()");
+  }
+
+  // Update status to contacted
+  const updated = await EnquiryService.updateEnquiryStatus(created.id, "contacted");
+  if (!updated) {
+    throw new Error("Failed to update enquiry status");
+  }
+
+  const allAfterUpdate = await EnquiryService.getEnquiries();
+  const foundUpdated = allAfterUpdate.find((e) => e.id === created.id);
+  if (!foundUpdated || foundUpdated.status !== "contacted") {
+    throw new Error("Enquiry status did not reflect 'contacted'");
+  }
+
+  // Clean up
+  await EnquiryService.deleteEnquiry(created.id);
+  const allAfterDelete = await EnquiryService.getEnquiries();
+  if (allAfterDelete.some((e) => e.id === created.id)) {
+    throw new Error("Enquiry was not removed after deleteEnquiry()");
+  }
+});
+
+it("Order Persistence", "Creates order, persists snapshot, and updates status", async () => {
+  const order = await OrderService.createOrder({
+    customerName: "QA Customer Test",
+    customerPhone: "9876543210",
+    customerEmail: "orderqa@example.com",
+    shippingAddress: "Plot 42, Handloom Park",
+    shippingCity: "Varanasi",
+    shippingState: "Uttar Pradesh",
+    shippingPincode: "221001",
+    totalAmount: 999,
+    mrpTotal: 1999,
+    savingsTotal: 1000,
+    items: [
+      {
+        productId: "prod-01",
+        sku: "RA-GAM-001",
+        title: "Classic Bengal Cotton Gamcha",
+        colorName: "Traditional Red",
+        quantity: 2,
+        sellingPrice: 199,
+        mrp: 399,
+      },
+    ],
+  });
+
+  if (!order.id || !order.orderNumber.startsWith("RA-ORD-")) {
+    throw new Error("Invalid order generated");
+  }
+
+  const allOrders = await OrderService.getOrders();
+  const match = allOrders.find((o) => o.id === order.id);
+  if (!match) {
+    throw new Error("Created order not found in getOrders()");
+  }
+
+  const statusSuccess = await OrderService.updateOrderStatus(order.id, "shipped");
+  if (!statusSuccess) {
+    throw new Error("Failed to update order status");
+  }
+
+  const allUpdated = await OrderService.getOrders();
+  const updatedOrder = allUpdated.find((o) => o.id === order.id);
+  if (!updatedOrder || updatedOrder.orderStatus !== "shipped") {
+    throw new Error("Order status not updated to 'shipped'");
   }
 });
 

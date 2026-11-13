@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { offers } from "@/db/schema";
+import { PersistentStore } from "@/lib/storage/persistentStore";
 
 export interface OfferData {
   id: string;
@@ -11,6 +12,8 @@ export interface OfferData {
   isPopupActive: boolean;
 }
 
+const STORAGE_KEY = "offers.json";
+
 const defaultOffer: OfferData = {
   id: "offer-firstfree",
   title: "First Order Free Delivery Across India",
@@ -19,6 +22,19 @@ const defaultOffer: OfferData = {
   bannerImageUrl: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800",
   isPopupActive: true,
 };
+
+function getStoredOffer(): OfferData {
+  const fromDisk = PersistentStore.readJson<OfferData>(STORAGE_KEY);
+  if (fromDisk && fromDisk.id) {
+    return fromDisk;
+  }
+  PersistentStore.writeJson(STORAGE_KEY, defaultOffer);
+  return { ...defaultOffer };
+}
+
+function saveStoredOffer(data: OfferData): void {
+  PersistentStore.writeJson(STORAGE_KEY, data);
+}
 
 export class OfferService {
   /**
@@ -32,7 +48,7 @@ export class OfferService {
         });
 
         if (active) {
-          return {
+          const loaded: OfferData = {
             id: active.id,
             title: active.title,
             description: active.description,
@@ -40,13 +56,15 @@ export class OfferService {
             bannerImageUrl: active.bannerImageUrl,
             isPopupActive: active.isPopupActive,
           };
+          saveStoredOffer(loaded);
+          return loaded;
         }
       } catch (err) {
-        console.warn("Database lookup for offers failed:", err);
+        console.warn("[OfferService] Database lookup for offers failed:", err);
       }
     }
 
-    return defaultOffer;
+    return getStoredOffer();
   }
 
   /**
@@ -54,17 +72,22 @@ export class OfferService {
    */
   static async setPopupActive(offerId: string, isActive: boolean): Promise<boolean> {
     if (db) {
-      return await db.transaction(async (tx) => {
-        if (isActive) {
-          // Deactivate all others
-          await tx.update(offers).set({ isPopupActive: false });
-        }
-        await tx.update(offers).set({ isPopupActive: isActive }).where(eq(offers.id, offerId));
-        return true;
-      });
+      try {
+        await db.transaction(async (tx) => {
+          if (isActive) {
+            // Deactivate all others
+            await tx.update(offers).set({ isPopupActive: false });
+          }
+          await tx.update(offers).set({ isPopupActive: isActive }).where(eq(offers.id, offerId));
+        });
+      } catch (err) {
+        console.warn("[OfferService] DB update failed, falling back to persistent storage:", err);
+      }
     }
 
-    defaultOffer.isPopupActive = isActive;
+    const current = getStoredOffer();
+    current.isPopupActive = isActive;
+    saveStoredOffer(current);
     return true;
   }
 }

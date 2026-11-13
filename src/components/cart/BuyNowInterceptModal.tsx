@@ -25,7 +25,33 @@ export const BuyNowInterceptModal: React.FC<BuyNowInterceptModalProps> = ({
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [pincode, setPincode] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  React.useEffect(() => {
+    async function loadSavedProfile() {
+      try {
+        const res = await fetch("/api/account/profile");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.data?.user) {
+            const u = data.data.user;
+            setUserId(u.userId || null);
+            if (u.fullName) setCustomerName(u.fullName);
+            if (u.phone) setCustomerPhone(u.phone);
+            if (u.addressStreet) setAddress(u.addressStreet);
+            if (u.addressCity) setCity(u.addressCity);
+            if (u.addressPincode) setPincode(u.addressPincode);
+          }
+        }
+      } catch {
+        // Continue as guest
+      }
+    }
+    if (isOpen) {
+      loadSavedProfile();
+    }
+  }, [isOpen]);
 
   const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -41,6 +67,7 @@ export const BuyNowInterceptModal: React.FC<BuyNowInterceptModalProps> = ({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          userId: userId || null,
           customerName: customerName.trim() || "Guest Customer",
           customerPhone: customerPhone.trim() || "9999999999",
           customerEmail: null,

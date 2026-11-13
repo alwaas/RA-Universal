@@ -18,12 +18,20 @@ function getDatabaseClient() {
   }
 
   if (process.env.NODE_ENV === "production") {
-    const client = postgres(connectionString, { prepare: false });
+    const client = postgres(connectionString, {
+      prepare: false,
+      connect_timeout: 3,
+      idle_timeout: 20,
+    });
     return drizzle(client, { schema });
   }
 
   if (!global.__dbInstance) {
-    const client = postgres(connectionString, { prepare: false });
+    const client = postgres(connectionString, {
+      prepare: false,
+      connect_timeout: 3,
+      idle_timeout: 20,
+    });
     global.__dbInstance = drizzle(client, { schema });
   }
 
