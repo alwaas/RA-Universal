@@ -586,7 +586,11 @@ export default function CustomerProfilePage() {
                         <div>
                           <span className="text-neutral-500 text-[11px] block">Delivery Location:</span>
                           <span className="text-neutral-800 font-medium">
-                            {order.shippingAddress}, {order.shippingCity} - {order.shippingPincode}
+                            {typeof order.shippingAddress === "object" && order.shippingAddress !== null
+                              ? Object.values(order.shippingAddress).filter((v) => typeof v === "string").join(", ")
+                              : order.shippingAddress || "Standard Delivery"}
+                            {order.shippingCity ? `, ${order.shippingCity}` : ""}
+                            {order.shippingPincode ? ` - ${order.shippingPincode}` : ""}
                           </span>
                         </div>
 

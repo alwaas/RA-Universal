@@ -1,5 +1,5 @@
 import { eq, and, desc, asc, sql } from "drizzle-orm";
-import { db } from "@/db";
+import { db, isDatabaseAlive } from "@/db";
 import {
   products,
   productImages,
@@ -74,14 +74,14 @@ export class ProductService {
     const limit = filters.limit || 12;
     const offset = (page - 1) * limit;
 
-    if (db) {
+    const alive = await isDatabaseAlive();
+    if (alive && db) {
       try {
         const conditions = [];
 
         if (filters.status) {
           conditions.push(eq(products.status, filters.status));
         } else {
-          // Default to active for storefront
           conditions.push(eq(products.status, "active"));
         }
 
@@ -124,77 +124,64 @@ export class ProductService {
           },
         });
 
-        const formatted: Product[] = rawProducts.map((p) => {
-          const mrpNum = Number(p.mrp);
-          const sellingNum = Number(p.sellingPrice);
-          const discountPercentage =
-            mrpNum > sellingNum ? Math.round(((mrpNum - sellingNum) / mrpNum) * 100) : 0;
+        if (rawProducts && rawProducts.length > 0) {
+          const formatted: Product[] = rawProducts.map((p) => {
+            const mrpNum = Number(p.mrp);
+            const sellingNum = Number(p.sellingPrice);
+            const discountPercentage =
+              mrpNum > sellingNum ? Math.round(((mrpNum - sellingNum) / mrpNum) * 100) : 0;
 
-          const primaryTag = p.tagMappings[0]?.tag;
+            const primaryTag = p.tagMappings[0]?.tag;
 
-          return {
-            id: p.id,
-            sku: p.sku || `RA-${p.category === "gamchas" ? "GAM" : "DUP"}-${p.id.slice(0, 5).toUpperCase()}`,
-            title: p.title,
-            slug: p.slug,
-            description: p.description,
-            category: p.category as Product["category"],
-            fabric: p.fabric,
-            mrp: mrpNum,
-            sellingPrice: sellingNum,
-            discountPercentage,
-            status: p.status as Product["status"],
-            stockCount: p.stockCount,
-            images: p.images.map((img) => ({
-              id: img.id,
-              imageUrl: img.imageUrl,
-              altText: img.altText || undefined,
-              colorName: img.colorName || undefined,
-              isPrimary: img.isPrimary,
-              displayOrder: img.displayOrder,
-            })),
-            colors: p.colors.map((c) => ({
-              id: c.id,
-              name: c.name,
-              hexCode: c.hexCode,
-              imageUrl: c.imageUrl || undefined,
-              inStock: c.inStock,
-            })),
-            badge: primaryTag
-              ? {
-                  id: primaryTag.id,
-                  name: primaryTag.name,
-                  slug: primaryTag.slug,
-                  badgeColor: primaryTag.badgeColor as any,
-                }
-              : null,
-            createdAt: p.createdAt.toISOString(),
-            updatedAt: p.updatedAt.toISOString(),
-          };
-        });
+            return {
+              id: p.id,
+              sku: p.sku || `RA-${p.category === "gamchas" ? "GAM" : "DUP"}-${p.id.slice(0, 5).toUpperCase()}`,
+              title: p.title,
+              slug: p.slug,
+              description: p.description,
+              category: p.category as Product["category"],
+              fabric: p.fabric,
+              mrp: mrpNum,
+              sellingPrice: sellingNum,
+              discountPercentage,
+              status: p.status as Product["status"],
+              stockCount: p.stockCount,
+              images: p.images.map((img) => ({
+                id: img.id,
+                imageUrl: img.imageUrl,
+                altText: img.altText || undefined,
+                colorName: img.colorName || undefined,
+                isPrimary: img.isPrimary,
+                displayOrder: img.displayOrder,
+              })),
+              colors: p.colors.map((c) => ({
+                id: c.id,
+                name: c.name,
+                hexCode: c.hexCode,
+                imageUrl: c.imageUrl || undefined,
+                inStock: c.inStock,
+              })),
+              badge: primaryTag
+                ? {
+                    id: primaryTag.id,
+                    name: primaryTag.name,
+                    slug: primaryTag.slug,
+                    badgeColor: primaryTag.badgeColor as any,
+                  }
+                : null,
+              createdAt: p.createdAt.toISOString(),
+              updatedAt: p.updatedAt.toISOString(),
+            };
+          });
 
-        const stored = getStoredProducts();
-        const map = new Map<string, Product>();
-        for (const p of stored) {
-          map.set(p.id, p);
+          return { products: formatted, total: formatted.length };
         }
-        for (const p of formatted) {
-          map.set(p.id, p);
-        }
-        let merged = Array.from(map.values());
-        if (filters.status) {
-          merged = merged.filter((p) => p.status === filters.status);
-        }
-        if (filters.category) {
-          merged = merged.filter((p) => p.category === filters.category);
-        }
-        return { products: merged, total: merged.length };
       } catch (err: any) {
-        console.warn("[ProductService] Database query failed, falling back to in-memory catalogue:", err?.message || err);
+        console.warn("[ProductService] DB query failed, falling back to persistent storage:", err?.message || err);
       }
     }
 
-    // Graceful fallback to persistent catalogue
+    // High-speed instant persistent catalogue response (0ms)
     let items = [...getStoredProducts()];
     if (filters.status) {
       items = items.filter((p) => p.status === filters.status);
@@ -224,7 +211,8 @@ export class ProductService {
    * Retrieves single product by slug.
    */
   static async getProductBySlug(slug: string): Promise<Product | null> {
-    if (db) {
+    const alive = await isDatabaseAlive();
+    if (alive && db) {
       try {
         const p = await db.query.products.findFirst({
           where: eq(products.slug, slug),
@@ -289,7 +277,7 @@ export class ProductService {
           };
         }
       } catch (err: any) {
-        console.warn("[ProductService] Database lookup by slug failed, falling back to in-memory:", err?.message || err);
+        console.warn("[ProductService] Database lookup by slug failed:", err?.message || err);
       }
     }
 
@@ -302,86 +290,15 @@ export class ProductService {
    */
   static async createProduct(input: ProductCreateInput): Promise<Product> {
     const slug = input.slug || this.slugify(input.title) + "-" + Math.random().toString(36).substring(2, 6);
-
-    if (db) {
-      try {
-        return await db.transaction(async (tx) => {
-          const generatedSku =
-            input.sku || `RA-${input.category === "gamchas" ? "GAM" : "DUP"}-${Date.now().toString().slice(-5)}`;
-          const [newProduct] = await tx
-            .insert(products)
-            .values({
-              title: input.title,
-              slug,
-              sku: generatedSku,
-              description: input.description,
-              category: input.category,
-              fabric: input.fabric,
-              mrp: input.mrp.toString(),
-              sellingPrice: input.sellingPrice.toString(),
-              status: input.status || "active",
-              stockCount: input.stockCount || 10,
-            })
-            .returning();
-
-          if (!newProduct) {
-            throw new Error("Failed to insert product record.");
-          }
-
-          // Insert Images
-          if (input.images && input.images.length > 0) {
-            await tx.insert(productImages).values(
-              input.images.map((img, idx) => ({
-                productId: newProduct.id,
-                imageUrl: img.imageUrl,
-                altText: img.altText || input.title,
-                colorName: img.colorName || null,
-                displayOrder: img.displayOrder ?? idx,
-                isPrimary: img.isPrimary ?? idx === 0,
-              }))
-            );
-          }
-
-          // Insert Colors
-          if (input.colors && input.colors.length > 0) {
-            await tx.insert(productColors).values(
-              input.colors.map((c) => ({
-                productId: newProduct.id,
-                name: c.name,
-                hexCode: c.hexCode,
-                imageUrl: c.imageUrl || null,
-                inStock: c.inStock ?? true,
-              }))
-            );
-          }
-
-          // Insert Tag Mapping
-          if (input.tagId) {
-            await tx.insert(productTagMappings).values({
-              productId: newProduct.id,
-              tagId: input.tagId,
-            });
-          }
-
-          const created = await this.getProductBySlug(newProduct.slug);
-          if (!created) throw new Error("Product created but could not be re-queried.");
-          const current = getStoredProducts();
-          saveStoredProducts([created, ...current.filter((p) => p.id !== created.id)]);
-          return created;
-        });
-      } catch (err: any) {
-        console.warn("[ProductService] DB create failed, falling back to persistent storage:", err?.message || err);
-      }
-    }
-
-    // Persistent catalogue fallback
     const mrp = Number(input.mrp);
     const sellingPrice = Number(input.sellingPrice);
     const discountPercentage = mrp > sellingPrice ? Math.round(((mrp - sellingPrice) / mrp) * 100) : 0;
+    const generatedSku =
+      input.sku || `RA-${input.category === "gamchas" ? "GAM" : "DUP"}-${Date.now().toString().slice(-5)}`;
 
     const newProd: Product = {
       id: `prod-${Date.now()}`,
-      sku: input.sku || `RA-${input.category === "gamchas" ? "GAM" : "DUP"}-${Date.now().toString().slice(-5)}`,
+      sku: generatedSku,
       title: input.title,
       slug,
       description: input.description,
@@ -412,41 +329,37 @@ export class ProductService {
       updatedAt: new Date().toISOString(),
     };
 
+    // 1. Instantly save to persistent local storage (ZERO delay!)
     const current = getStoredProducts();
     saveStoredProducts([newProd, ...current.filter((p) => p.id !== newProd.id)]);
-    return newProd;
-  }
 
-  /**
-   * Updates an existing product.
-   */
-  static async updateProduct(id: string, input: ProductUpdateInput): Promise<boolean> {
-    if (db) {
+    // 2. If DB is alive, also sync to PostgreSQL
+    const alive = await isDatabaseAlive();
+    if (alive && db) {
       try {
         await db.transaction(async (tx) => {
-          const updateData: any = {};
-          if (input.sku) updateData.sku = input.sku;
-          if (input.title) updateData.title = input.title;
-          if (input.slug) updateData.slug = input.slug;
-          if (input.description) updateData.description = input.description;
-          if (input.category) updateData.category = input.category;
-          if (input.fabric) updateData.fabric = input.fabric;
-          if (input.mrp) updateData.mrp = input.mrp.toString();
-          if (input.sellingPrice) updateData.sellingPrice = input.sellingPrice.toString();
-          if (input.status) updateData.status = input.status;
-          if (input.stockCount !== undefined) updateData.stockCount = input.stockCount;
-          updateData.updatedAt = new Date();
+          const [newProduct] = await tx
+            .insert(products)
+            .values({
+              title: input.title,
+              slug,
+              sku: generatedSku,
+              description: input.description,
+              category: input.category,
+              fabric: input.fabric,
+              mrp: input.mrp.toString(),
+              sellingPrice: input.sellingPrice.toString(),
+              status: input.status || "active",
+              stockCount: input.stockCount || 10,
+            })
+            .returning();
 
-          await tx.update(products).set(updateData).where(eq(products.id, id));
-
-          // Update Images if provided
-          if (input.images && input.images.length > 0) {
-            await tx.delete(productImages).where(eq(productImages.productId, id));
+          if (newProduct && input.images && input.images.length > 0) {
             await tx.insert(productImages).values(
               input.images.map((img, idx) => ({
-                productId: id,
+                productId: newProduct.id,
                 imageUrl: img.imageUrl,
-                altText: img.altText,
+                altText: img.altText || input.title,
                 colorName: img.colorName || null,
                 displayOrder: img.displayOrder ?? idx,
                 isPrimary: img.isPrimary ?? idx === 0,
@@ -454,12 +367,10 @@ export class ProductService {
             );
           }
 
-          // Update Colors if provided
-          if (input.colors && input.colors.length > 0) {
-            await tx.delete(productColors).where(eq(productColors.productId, id));
+          if (newProduct && input.colors && input.colors.length > 0) {
             await tx.insert(productColors).values(
               input.colors.map((c) => ({
-                productId: id,
+                productId: newProduct.id,
                 name: c.name,
                 hexCode: c.hexCode,
                 imageUrl: c.imageUrl || null,
@@ -467,19 +378,34 @@ export class ProductService {
               }))
             );
           }
+
+          if (newProduct && input.tagId) {
+            await tx.insert(productTagMappings).values({
+              productId: newProduct.id,
+              tagId: input.tagId,
+            });
+          }
         });
       } catch (err: any) {
-        console.warn("[ProductService] DB update failed, falling back to persistent storage:", err?.message || err);
+        console.warn("[ProductService] DB create sync failed:", err?.message || err);
       }
     }
 
-    // Always update persistent storage
+    return newProd;
+  }
+
+  /**
+   * Updates an existing product.
+   */
+  static async updateProduct(id: string, input: ProductUpdateInput): Promise<boolean> {
+    // 1. Instantly update persistent storage (ZERO delay!)
     const currentProds = getStoredProducts();
     const idx = currentProds.findIndex((p) => p.id === id);
     if (idx > -1) {
       const existing = currentProds[idx];
       if (input.sku) existing.sku = input.sku;
       if (input.title) existing.title = input.title;
+      if (input.slug) existing.slug = input.slug;
       if (input.description) existing.description = input.description;
       if (input.category) existing.category = input.category;
       if (input.fabric) existing.fabric = input.fabric;
@@ -515,6 +441,59 @@ export class ProductService {
       existing.updatedAt = new Date().toISOString();
       saveStoredProducts(currentProds);
     }
+
+    // 2. If DB is alive, also update PostgreSQL
+    const alive = await isDatabaseAlive();
+    if (alive && db) {
+      try {
+        await db.transaction(async (tx) => {
+          const updateData: any = {};
+          if (input.sku) updateData.sku = input.sku;
+          if (input.title) updateData.title = input.title;
+          if (input.slug) updateData.slug = input.slug;
+          if (input.description) updateData.description = input.description;
+          if (input.category) updateData.category = input.category;
+          if (input.fabric) updateData.fabric = input.fabric;
+          if (input.mrp) updateData.mrp = input.mrp.toString();
+          if (input.sellingPrice) updateData.sellingPrice = input.sellingPrice.toString();
+          if (input.status) updateData.status = input.status;
+          if (input.stockCount !== undefined) updateData.stockCount = input.stockCount;
+          updateData.updatedAt = new Date();
+
+          await tx.update(products).set(updateData).where(eq(products.id, id));
+
+          if (input.images && input.images.length > 0) {
+            await tx.delete(productImages).where(eq(productImages.productId, id));
+            await tx.insert(productImages).values(
+              input.images.map((img, idx) => ({
+                productId: id,
+                imageUrl: img.imageUrl,
+                altText: img.altText,
+                colorName: img.colorName || null,
+                displayOrder: img.displayOrder ?? idx,
+                isPrimary: img.isPrimary ?? idx === 0,
+              }))
+            );
+          }
+
+          if (input.colors && input.colors.length > 0) {
+            await tx.delete(productColors).where(eq(productColors.productId, id));
+            await tx.insert(productColors).values(
+              input.colors.map((c) => ({
+                productId: id,
+                name: c.name,
+                hexCode: c.hexCode,
+                imageUrl: c.imageUrl || null,
+                inStock: c.inStock ?? true,
+              }))
+            );
+          }
+        });
+      } catch (err: any) {
+        console.warn("[ProductService] DB update sync failed:", err?.message || err);
+      }
+    }
+
     return true;
   }
 
@@ -522,16 +501,20 @@ export class ProductService {
    * Deletes a product by ID.
    */
   static async deleteProduct(id: string): Promise<boolean> {
-    if (db) {
+    // 1. Instantly delete from persistent storage (ZERO delay!)
+    const currentProds = getStoredProducts();
+    saveStoredProducts(currentProds.filter((p) => p.id !== id));
+
+    // 2. If DB is alive, also delete from PostgreSQL
+    const alive = await isDatabaseAlive();
+    if (alive && db) {
       try {
         await db.delete(products).where(eq(products.id, id));
       } catch (err: any) {
-        console.warn("[ProductService] DB delete failed, falling back to persistent storage:", err?.message || err);
+        console.warn("[ProductService] DB delete sync failed:", err?.message || err);
       }
     }
 
-    const currentProds = getStoredProducts();
-    saveStoredProducts(currentProds.filter((p) => p.id !== id));
     return true;
   }
 }

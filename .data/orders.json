@@ -1,5 +1,127 @@
 [
   {
+    "id": "ord-1794646362778",
+    "orderNumber": "RA-ORD-36277848",
+    "userId": null,
+    "customerName": "QA Customer Test",
+    "customerPhone": "9876543210",
+    "customerEmail": "orderqa@example.com",
+    "shippingAddress": "Plot 42, Handloom Park",
+    "shippingCity": "Varanasi",
+    "shippingState": "Uttar Pradesh",
+    "shippingPincode": "221001",
+    "totalAmount": 999,
+    "mrpTotal": 1999,
+    "savingsTotal": 1000,
+    "orderStatus": "shipped",
+    "paymentStatus": "pending_whatsapp",
+    "items": [
+      {
+        "productId": "prod-01",
+        "sku": "RA-GAM-001",
+        "title": "Classic Bengal Cotton Gamcha",
+        "colorName": "Traditional Red",
+        "quantity": 2,
+        "sellingPrice": 199,
+        "mrp": 399
+      }
+    ],
+    "notes": null,
+    "createdAt": "2026-11-14T08:52:42.778Z",
+    "updatedAt": "2026-11-14T08:52:42.785Z"
+  },
+  {
+    "id": "ord-1794643398697",
+    "orderNumber": "RA-ORD-39869751",
+    "userId": null,
+    "customerName": "Rahul Sharma",
+    "customerPhone": "9876543210",
+    "customerEmail": null,
+    "shippingAddress": "123 MG Road",
+    "shippingCity": "Kolkata",
+    "shippingState": "West Bengal",
+    "shippingPincode": "700001",
+    "totalAmount": 2598,
+    "mrpTotal": 3998,
+    "savingsTotal": 1400,
+    "orderStatus": "confirmed",
+    "paymentStatus": "pending_whatsapp",
+    "items": [
+      {
+        "productId": "prod-1",
+        "title": "Katan Silk Dupatta",
+        "quantity": 2,
+        "sellingPrice": 1299,
+        "mrp": 1999,
+        "colorName": "Navy Blue"
+      }
+    ],
+    "notes": null,
+    "createdAt": "2026-11-14T08:03:18.697Z",
+    "updatedAt": "2026-11-14T08:03:18.703Z"
+  },
+  {
+    "id": "ord-1794643345581",
+    "orderNumber": "RA-ORD-34558187",
+    "userId": null,
+    "customerName": "Rahul Sharma",
+    "customerPhone": "9876543210",
+    "customerEmail": null,
+    "shippingAddress": "123 MG Road",
+    "shippingCity": "Kolkata",
+    "shippingState": "West Bengal",
+    "shippingPincode": "700001",
+    "totalAmount": 2598,
+    "mrpTotal": 3998,
+    "savingsTotal": 1400,
+    "orderStatus": "confirmed",
+    "paymentStatus": "pending_whatsapp",
+    "items": [
+      {
+        "productId": "prod-1",
+        "title": "Katan Silk Dupatta",
+        "quantity": 2,
+        "sellingPrice": 1299,
+        "mrp": 1999,
+        "colorName": "Navy Blue"
+      }
+    ],
+    "notes": null,
+    "createdAt": "2026-11-14T08:02:25.581Z",
+    "updatedAt": "2026-11-14T08:02:25.587Z"
+  },
+  {
+    "id": "ord-1794642962103",
+    "orderNumber": "RA-ORD-96210320",
+    "userId": null,
+    "customerName": "QA Customer Test",
+    "customerPhone": "9876543210",
+    "customerEmail": "orderqa@example.com",
+    "shippingAddress": "Plot 42, Handloom Park",
+    "shippingCity": "Varanasi",
+    "shippingState": "Uttar Pradesh",
+    "shippingPincode": "221001",
+    "totalAmount": 999,
+    "mrpTotal": 1999,
+    "savingsTotal": 1000,
+    "orderStatus": "shipped",
+    "paymentStatus": "pending_whatsapp",
+    "items": [
+      {
+        "productId": "prod-01",
+        "sku": "RA-GAM-001",
+        "title": "Classic Bengal Cotton Gamcha",
+        "colorName": "Traditional Red",
+        "quantity": 2,
+        "sellingPrice": 199,
+        "mrp": 399
+      }
+    ],
+    "notes": null,
+    "createdAt": "2026-11-14T07:56:02.103Z",
+    "updatedAt": "2026-11-14T07:56:02.109Z"
+  },
+  {
     "id": "ord-1794545758796",
     "orderNumber": "RA-ORD-75879696",
     "userId": null,

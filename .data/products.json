@@ -1,75 +1,39 @@
 [
   {
-    "id": "prod-01",
-    "title": "Classic Bengal Cotton Gamcha - Heritage Red Check",
-    "slug": "classic-bengal-cotton-gamcha-red",
-    "category": "gamchas",
-    "fabric": "100% Pure Bengal Weave Cotton",
-    "description": "Traditional Bengali check handloom gamcha woven with 100% pure desi cotton. Exceptional water absorption, rapid drying, and durable double-stitched borders.",
-    "mrp": 399,
-    "sellingPrice": 199,
-    "discountPercentage": 50,
+    "id": "prod-1794643295770",
+    "sku": "RA-DUP-95770",
+    "title": "Pure Handloom Varanasi Dupatta",
+    "slug": "pure-handloom-varanasi-dupatta-1794643295769",
+    "description": "Pure Banarasi Handloom weave crafted with silk threads",
+    "category": "dupattas",
+    "fabric": "Mulmul Cotton",
+    "mrp": 1499,
+    "sellingPrice": 899,
+    "discountPercentage": 40,
     "status": "active",
     "stockCount": 25,
-    "badge": {
-      "id": "tag-best-seller",
-      "name": "Best Selling",
-      "slug": "best-selling",
-      "badgeColor": "yellow"
-    },
-    "colors": [
-      {
-        "id": "c-1",
-        "name": "Traditional Red",
-        "hexCode": "#DC2626",
-        "imageUrl": "https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=800&auto=format&fit=crop&q=80"
-      },
-      {
-        "id": "c-2",
-        "name": "Forest Green",
-        "hexCode": "#15803D",
-        "imageUrl": "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&auto=format&fit=crop&q=80"
-      },
-      {
-        "id": "c-3",
-        "name": "Indigo Blue",
-        "hexCode": "#1D4ED8",
-        "imageUrl": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80"
-      }
-    ],
     "images": [
       {
-        "id": "img-1",
-        "imageUrl": "https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=800&auto=format&fit=crop&q=80",
-        "altText": "Traditional Red Check Gamcha - Front View",
-        "colorName": "Traditional Red",
-        "isPrimary": true
-      },
-      {
-        "id": "img-1-texture",
-        "imageUrl": "https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=800&auto=format&fit=crop&q=80",
-        "altText": "Traditional Red Check Gamcha - Close-up Weave Detail",
-        "colorName": "Traditional Red",
-        "isPrimary": false
-      },
-      {
-        "id": "img-1-green",
-        "imageUrl": "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&auto=format&fit=crop&q=80",
-        "altText": "Forest Green Check Gamcha Variant",
-        "colorName": "Forest Green",
-        "isPrimary": false
-      },
-      {
-        "id": "img-1-blue",
-        "imageUrl": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80",
-        "altText": "Indigo Blue Check Gamcha Variant",
-        "colorName": "Indigo Blue",
-        "isPrimary": false
+        "id": "img-1794643295770-0",
+        "imageUrl": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800",
+        "altText": "Dupatta",
+        "colorName": null,
+        "isPrimary": true,
+        "displayOrder": 0
       }
     ],
-    "createdAt": "2026-01-01T00:00:00Z",
-    "updatedAt": "2026-01-01T00:00:00Z",
-    "sku": "RA-GAM-001"
+    "colors": [
+      {
+        "id": "col-1794643295770-0",
+        "name": "Royal Indigo",
+        "hexCode": "#1B1B3A",
+        "imageUrl": null,
+        "inStock": true
+      }
+    ],
+    "badge": null,
+    "createdAt": "2026-11-14T08:01:35.770Z",
+    "updatedAt": "2026-11-14T08:01:35.778Z"
   },
   {
     "id": "prod-02",
@@ -299,62 +263,6 @@
     "sku": "RA-DUP-005"
   },
   {
-    "id": "prod-06",
-    "title": "Amritsari Phulkari Embroidered Festive Dupatta",
-    "slug": "amritsari-phulkari-embroidered-dupatta",
-    "category": "scarves_dupattas",
-    "fabric": "Lightweight Georgette with Silk Floss Embroidery",
-    "description": "Vibrant Punjabi Phulkari dupatta covered with dense geometric floral motifs hand-embroidered with untwisted silk floss thread.",
-    "mrp": 1999,
-    "sellingPrice": 1099,
-    "discountPercentage": 45,
-    "status": "active",
-    "stockCount": 2,
-    "badge": {
-      "id": "tag-low-stock",
-      "name": "Only 2-3 Left",
-      "slug": "only-2-3-left",
-      "badgeColor": "orange"
-    },
-    "colors": [
-      {
-        "id": "c-12",
-        "name": "Festive Red",
-        "hexCode": "#DC2626",
-        "imageUrl": "https://images.unsplash.com/photo-1610030469668-93510cb67655?w=800&auto=format&fit=crop&q=80"
-      },
-      {
-        "id": "c-13",
-        "name": "Basanti Yellow",
-        "hexCode": "#EAB308",
-        "imageUrl": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&auto=format&fit=crop&q=80"
-      }
-    ],
-    "images": [
-      {
-        "id": "img-6-red",
-        "imageUrl": "https://images.unsplash.com/photo-1610030469668-93510cb67655?w=800&auto=format&fit=crop&q=80",
-        "altText": "Phulkari Festive Red Dupatta",
-        "isPrimary": true
-      },
-      {
-        "id": "img-6-yellow",
-        "imageUrl": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&auto=format&fit=crop&q=80",
-        "altText": "Phulkari Basanti Yellow Dupatta",
-        "isPrimary": false
-      },
-      {
-        "id": "img-6-embroidery",
-        "imageUrl": "https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=800&auto=format&fit=crop&q=80",
-        "altText": "Phulkari Silk Thread Embroidery Detail",
-        "isPrimary": false
-      }
-    ],
-    "createdAt": "2026-01-01T00:00:00Z",
-    "updatedAt": "2026-01-01T00:00:00Z",
-    "sku": "RA-DUP-006"
-  },
-  {
     "id": "prod-07",
     "title": "Hand-Dyed Indigo Check Handloom Gamcha",
     "slug": "hand-dyed-indigo-check-gamcha",
@@ -397,49 +305,5 @@
     "createdAt": "2026-01-01T00:00:00Z",
     "updatedAt": "2026-01-01T00:00:00Z",
     "sku": "RA-GAM-007"
-  },
-  {
-    "id": "prod-08",
-    "title": "Bandhani Tie & Dye Jaipuri Georgette Dupatta",
-    "slug": "bandhani-tie-dye-jaipuri-georgette-dupatta",
-    "category": "scarves_dupattas",
-    "fabric": "Crinkled Pure Georgette",
-    "description": "Traditional Rajasthani Rai Bandhej knots on soft crinkled georgette. Rich dual-tone palette.",
-    "mrp": 1399,
-    "sellingPrice": 749,
-    "discountPercentage": 46,
-    "status": "active",
-    "stockCount": 0,
-    "badge": {
-      "id": "tag-out-of-stock",
-      "name": "Out of Stock",
-      "slug": "out-of-stock",
-      "badgeColor": "gray"
-    },
-    "colors": [
-      {
-        "id": "c-15",
-        "name": "Dual Red & Yellow",
-        "hexCode": "#DC2626",
-        "imageUrl": "https://images.unsplash.com/photo-1610030469668-93510cb67655?w=800&auto=format&fit=crop&q=80"
-      }
-    ],
-    "images": [
-      {
-        "id": "img-8",
-        "imageUrl": "https://images.unsplash.com/photo-1610030469668-93510cb67655?w=800&auto=format&fit=crop&q=80",
-        "altText": "Bandhani Tie & Dye Jaipuri Georgette Dupatta",
-        "isPrimary": true
-      },
-      {
-        "id": "img-8-knots",
-        "imageUrl": "https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=800&auto=format&fit=crop&q=80",
-        "altText": "Rai Bandhej Knot Details",
-        "isPrimary": false
-      }
-    ],
-    "createdAt": "2026-01-01T00:00:00Z",
-    "updatedAt": "2026-01-01T00:00:00Z",
-    "sku": "RA-DUP-008"
   }
 ]

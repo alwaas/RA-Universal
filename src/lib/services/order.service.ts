@@ -1,5 +1,5 @@
 import { eq, desc, or, sql } from "drizzle-orm";
-import { db } from "@/db";
+import { db, isDatabaseAlive } from "@/db";
 import { orders } from "@/db/schema";
 import { PersistentStore } from "@/lib/storage/persistentStore";
 import type { Order, OrderStatus, PaymentStatus, OrderItem } from "@/types";
@@ -132,17 +132,58 @@ const inMemoryOrders: Order[] = [
   },
 ];
 
-function getStoredOrders(): Order[] {
-  const fromDisk = PersistentStore.readJson<Order[]>(STORAGE_KEY);
-  if (fromDisk && Array.isArray(fromDisk) && fromDisk.length > 0) {
-    return fromDisk;
+function normalizeOrder(raw: any): Order {
+  let shippingAddressStr = "";
+  let cityStr = raw.shippingCity || "";
+  let stateStr = raw.shippingState || "India";
+  let pincodeStr = raw.shippingPincode || "";
+
+  if (typeof raw.shippingAddress === "object" && raw.shippingAddress !== null) {
+    shippingAddressStr =
+      raw.shippingAddress.street ||
+      raw.shippingAddress.address ||
+      Object.values(raw.shippingAddress).filter((v) => typeof v === "string").join(", ");
+    if (!cityStr && raw.shippingAddress.city) cityStr = String(raw.shippingAddress.city);
+    if ((!stateStr || stateStr === "India") && raw.shippingAddress.state) stateStr = String(raw.shippingAddress.state);
+    if (!pincodeStr && raw.shippingAddress.pincode) pincodeStr = String(raw.shippingAddress.pincode);
+  } else {
+    shippingAddressStr = String(raw.shippingAddress || "");
   }
-  PersistentStore.writeJson(STORAGE_KEY, inMemoryOrders);
-  return [...inMemoryOrders];
+
+  return {
+    id: String(raw.id || `ord-${Date.now()}`),
+    orderNumber: String(raw.orderNumber || OrderService.generateOrderNumber()),
+    userId: raw.userId || null,
+    customerName: String(raw.customerName || "Customer"),
+    customerPhone: String(raw.customerPhone || ""),
+    customerEmail: raw.customerEmail ? String(raw.customerEmail) : null,
+    shippingAddress: shippingAddressStr,
+    shippingCity: cityStr,
+    shippingState: stateStr,
+    shippingPincode: pincodeStr,
+    totalAmount: Number(raw.totalAmount || 0),
+    mrpTotal: Number(raw.mrpTotal || raw.totalAmount || 0),
+    savingsTotal: Number(raw.savingsTotal || 0),
+    orderStatus: (raw.orderStatus as OrderStatus) || "pending",
+    paymentStatus: (raw.paymentStatus as PaymentStatus) || "pending_whatsapp",
+    items: Array.isArray(raw.items) ? raw.items : Array.isArray(raw.itemsJson) ? raw.itemsJson : [],
+    notes: raw.notes ? String(raw.notes) : null,
+    createdAt: raw.createdAt ? new Date(raw.createdAt).toISOString() : new Date().toISOString(),
+    updatedAt: raw.updatedAt ? new Date(raw.updatedAt).toISOString() : new Date().toISOString(),
+  };
+}
+
+function getStoredOrders(): Order[] {
+  const fromDisk = PersistentStore.readJson<any[]>(STORAGE_KEY);
+  if (fromDisk && Array.isArray(fromDisk) && fromDisk.length > 0) {
+    return fromDisk.map(normalizeOrder);
+  }
+  PersistentStore.writeJson(STORAGE_KEY, inMemoryOrders.map(normalizeOrder));
+  return inMemoryOrders.map(normalizeOrder);
 }
 
 function saveStoredOrders(ords: Order[]): void {
-  PersistentStore.writeJson(STORAGE_KEY, ords);
+  PersistentStore.writeJson(STORAGE_KEY, ords.map(normalizeOrder));
 }
 
 export class OrderService {
@@ -163,7 +204,23 @@ export class OrderService {
     const mrpTotal = input.mrpTotal ?? input.items.reduce((acc, i) => acc + (i.mrp || i.sellingPrice) * i.quantity, 0);
     const savingsTotal = input.savingsTotal ?? Math.max(0, mrpTotal - input.totalAmount);
 
-    if (db) {
+    let addressStr = "";
+    let cityStr = input.shippingCity || "";
+    let stateStr = input.shippingState || "India";
+    let pincodeStr = input.shippingPincode || "";
+
+    if (typeof (input as any).shippingAddress === "object" && (input as any).shippingAddress !== null) {
+      const addrObj = (input as any).shippingAddress;
+      addressStr = addrObj.street || addrObj.address || Object.values(addrObj).filter((v) => typeof v === "string").join(", ");
+      if (!cityStr && addrObj.city) cityStr = String(addrObj.city);
+      if ((!stateStr || stateStr === "India") && addrObj.state) stateStr = String(addrObj.state);
+      if (!pincodeStr && addrObj.pincode) pincodeStr = String(addrObj.pincode);
+    } else {
+      addressStr = String(input.shippingAddress || "");
+    }
+
+    const alive = await isDatabaseAlive();
+    if (alive && db) {
       try {
         const [created] = await db
           .insert(orders)
@@ -173,10 +230,10 @@ export class OrderService {
             customerName: input.customerName,
             customerPhone: input.customerPhone,
             customerEmail: input.customerEmail || null,
-            shippingAddress: input.shippingAddress,
-            shippingCity: input.shippingCity,
-            shippingState: input.shippingState || "India",
-            shippingPincode: input.shippingPincode,
+            shippingAddress: addressStr,
+            shippingCity: cityStr,
+            shippingState: stateStr,
+            shippingPincode: pincodeStr,
             totalAmount: input.totalAmount.toString(),
             mrpTotal: mrpTotal.toString(),
             savingsTotal: savingsTotal.toString(),
@@ -188,7 +245,7 @@ export class OrderService {
           .returning();
 
         if (created) {
-          const ord: Order = {
+          const ord: Order = normalizeOrder({
             id: created.id,
             orderNumber: created.orderNumber,
             userId: created.userId,
@@ -208,7 +265,7 @@ export class OrderService {
             notes: created.notes,
             createdAt: created.createdAt.toISOString(),
             updatedAt: created.updatedAt.toISOString(),
-          };
+          });
 
           const current = getStoredOrders();
           saveStoredOrders([ord, ...current.filter((o) => o.id !== ord.id)]);
@@ -219,17 +276,17 @@ export class OrderService {
       }
     }
 
-    const newOrder: Order = {
+    const newOrder: Order = normalizeOrder({
       id: `ord-${Date.now()}`,
       orderNumber,
       userId: input.userId || null,
       customerName: input.customerName,
       customerPhone: input.customerPhone,
       customerEmail: input.customerEmail || null,
-      shippingAddress: input.shippingAddress,
-      shippingCity: input.shippingCity,
-      shippingState: input.shippingState || "India",
-      shippingPincode: input.shippingPincode,
+      shippingAddress: addressStr,
+      shippingCity: cityStr,
+      shippingState: stateStr,
+      shippingPincode: pincodeStr,
       totalAmount: input.totalAmount,
       mrpTotal,
       savingsTotal,
@@ -239,7 +296,7 @@ export class OrderService {
       notes: input.notes || null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    };
+    });
 
     const current = getStoredOrders();
     saveStoredOrders([newOrder, ...current.filter((o) => o.id !== newOrder.id)]);
@@ -251,7 +308,8 @@ export class OrderService {
    */
   static async getOrders(): Promise<Order[]> {
     const fileList = getStoredOrders();
-    if (db) {
+    const alive = await isDatabaseAlive();
+    if (alive && db) {
       try {
         const raw = await db.query.orders.findMany({
           orderBy: [desc(orders.createdAt)],
@@ -313,7 +371,8 @@ export class OrderService {
   }): Promise<Order[]> {
     const cleanPhone = phone?.replace(/[^0-9]/g, "").slice(-10);
 
-    if (db) {
+    const alive = await isDatabaseAlive();
+    if (alive && db) {
       try {
         const conditions = [];
         if (userId) conditions.push(eq(orders.userId, userId));
@@ -377,7 +436,8 @@ export class OrderService {
     status?: OrderStatus,
     paymentStatus?: PaymentStatus
   ): Promise<boolean> {
-    if (db) {
+    const alive = await isDatabaseAlive();
+    if (alive && db) {
       try {
         const updateData: any = { updatedAt: new Date() };
         if (status) updateData.orderStatus = status;

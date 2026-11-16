@@ -163,10 +163,14 @@ export const AmazonInvoice: React.FC<AmazonInvoiceProps> = ({ orders, onClose })
                   <h3 className="font-bold text-neutral-900 uppercase text-[11px] mb-1">
                     Billing & Shipping Address:
                   </h3>
-                  <p className="font-bold text-neutral-900">{order.customerName}</p>
-                  <p className="text-neutral-700">{order.shippingAddress}</p>
+                  <p className="font-bold text-neutral-900">{order.customerName || "Valued Customer"}</p>
                   <p className="text-neutral-700">
-                    {order.shippingCity}, {order.shippingState} - {order.shippingPincode}
+                    {typeof order.shippingAddress === "object" && order.shippingAddress !== null
+                      ? Object.values(order.shippingAddress).filter((v) => typeof v === "string").join(", ")
+                      : order.shippingAddress || "Standard Delivery"}
+                  </p>
+                  <p className="text-neutral-700">
+                    {order.shippingCity || ""}{order.shippingCity && order.shippingState ? ", " : ""}{order.shippingState || "India"}{order.shippingPincode ? ` - ${order.shippingPincode}` : ""}
                   </p>
                   <p className="text-neutral-800 mt-0.5">
                     <span className="font-semibold">Phone:</span> +91 {order.customerPhone}

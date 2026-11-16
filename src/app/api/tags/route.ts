@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db";
+import { db, isDatabaseAlive } from "@/db";
 
 const defaultBadges = [
   { id: "tag-best-seller", name: "Best Selling", slug: "best-selling", badgeColor: "yellow", isActive: true },
@@ -10,12 +10,17 @@ const defaultBadges = [
 
 export async function GET() {
   try {
-    if (db) {
-      const tags = await db.query.productTags.findMany();
-      return NextResponse.json({
-        success: true,
-        data: tags.length > 0 ? tags : defaultBadges,
-      });
+    const alive = await isDatabaseAlive();
+    if (alive && db) {
+      try {
+        const tags = await db.query.productTags.findMany();
+        return NextResponse.json({
+          success: true,
+          data: tags.length > 0 ? tags : defaultBadges,
+        });
+      } catch (dbErr) {
+        console.warn("[TagsRoute] DB query failed, using default badges:", dbErr);
+      }
     }
 
     return NextResponse.json({
@@ -23,15 +28,9 @@ export async function GET() {
       data: defaultBadges,
     });
   } catch (err: any) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: {
-          code: "TAGS_FETCH_FAILED",
-          message: err.message || "Failed to load badges",
-        },
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: true,
+      data: defaultBadges,
+    });
   }
 }

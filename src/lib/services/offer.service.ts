@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { db } from "@/db";
+import { db, isDatabaseAlive } from "@/db";
 import { offers } from "@/db/schema";
 import { PersistentStore } from "@/lib/storage/persistentStore";
 
@@ -41,7 +41,8 @@ export class OfferService {
    * Retrieves the current active popup offer.
    */
   static async getActiveOffer(): Promise<OfferData | null> {
-    if (db) {
+    const alive = await isDatabaseAlive();
+    if (alive && db) {
       try {
         const active = await db.query.offers.findFirst({
           where: eq(offers.isPopupActive, true),
@@ -71,7 +72,8 @@ export class OfferService {
    * Toggles an offer active state. Enforces system rule: only one offer can be active popup at a time.
    */
   static async setPopupActive(offerId: string, isActive: boolean): Promise<boolean> {
-    if (db) {
+    const alive = await isDatabaseAlive();
+    if (alive && db) {
       try {
         await db.transaction(async (tx) => {
           if (isActive) {

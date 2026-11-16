@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { eq, or, desc } from "drizzle-orm";
-import { db } from "@/db";
+import { db, isDatabaseAlive } from "@/db";
 import { users } from "@/db/schema";
 import { createSessionToken } from "@/lib/auth/session";
 import { PersistentStore } from "@/lib/storage/persistentStore";
@@ -136,7 +136,8 @@ export class AuthService {
   static async registerCustomer(input: SignupInput): Promise<{ user: SessionUser; token: string }> {
     const passwordHash = await this.hashPassword(input.password);
 
-    if (db) {
+    const alive = await isDatabaseAlive();
+    if (alive && db) {
       try {
         // Check for duplicate phone or email
         const existing = await db.query.users.findFirst({
@@ -231,7 +232,8 @@ export class AuthService {
    */
   static async login(identifier: string, password: string): Promise<{ user: SessionUser; token: string }> {
     // 1. Check Database first if configured and reachable
-    if (db) {
+    const alive = await isDatabaseAlive();
+    if (alive && db) {
       try {
         const user = await db.query.users.findFirst({
           where: or(eq(users.phone, identifier), eq(users.email, identifier)),
@@ -341,7 +343,8 @@ export class AuthService {
       };
     }
 
-    if (db) {
+    const alive = await isDatabaseAlive();
+    if (alive && db) {
       try {
         const user = await db.query.users.findFirst({
           where: eq(users.id, userId),
@@ -554,7 +557,8 @@ export class AuthService {
       }
     }
 
-    if (db) {
+    const alive = await isDatabaseAlive();
+    if (alive && db) {
       try {
         const dbUsers = await db.query.users.findMany({
           where: eq(users.role, "customer"),

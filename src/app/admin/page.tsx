@@ -417,16 +417,23 @@ function AdminDashboardContent() {
   };
 
   const filteredOrders = orders.filter((order) => {
+    if (!order) return false;
     if (orderStatusFilter !== "all" && order.orderStatus !== orderStatusFilter) {
       return false;
     }
     if (orderSearchQuery.trim()) {
-      const q = orderSearchQuery.toLowerCase();
-      const matchNum = order.orderNumber.toLowerCase().includes(q);
-      const matchName = order.customerName.toLowerCase().includes(q);
-      const matchPhone = order.customerPhone.includes(q);
-      const matchCity = order.shippingCity.toLowerCase().includes(q);
-      const matchSku = order.items.some((i) => i.sku?.toLowerCase().includes(q));
+      const q = orderSearchQuery.toLowerCase().trim();
+      const matchNum = (order.orderNumber || "").toLowerCase().includes(q);
+      const matchName = (order.customerName || "").toLowerCase().includes(q);
+      const matchPhone = (order.customerPhone || "").includes(q);
+      const matchCity = (order.shippingCity || "").toLowerCase().includes(q);
+      const matchSku = Array.isArray(order.items)
+        ? order.items.some(
+            (i) =>
+              (i?.sku || "").toLowerCase().includes(q) ||
+              (i?.title || "").toLowerCase().includes(q)
+          )
+        : false;
       return matchNum || matchName || matchPhone || matchCity || matchSku;
     }
     return true;
@@ -1972,31 +1979,31 @@ function AdminDashboardContent() {
             <div className="bg-white p-3.5 rounded-[8px] border border-neutral-300 space-y-1 shadow-sm">
               <span className="text-[11px] font-semibold text-neutral-500 uppercase">Pending</span>
               <p className="text-xl font-bold text-amber-600">
-                {orders.filter((o) => o.orderStatus === "pending").length}
+                {orders.filter((o) => o?.orderStatus === "pending").length}
               </p>
             </div>
             <div className="bg-white p-3.5 rounded-[8px] border border-neutral-300 space-y-1 shadow-sm">
               <span className="text-[11px] font-semibold text-neutral-500 uppercase">Confirmed</span>
               <p className="text-xl font-bold text-blue-600">
-                {orders.filter((o) => o.orderStatus === "confirmed").length}
+                {orders.filter((o) => o?.orderStatus === "confirmed").length}
               </p>
             </div>
             <div className="bg-white p-3.5 rounded-[8px] border border-neutral-300 space-y-1 shadow-sm">
               <span className="text-[11px] font-semibold text-neutral-500 uppercase">Shipped</span>
               <p className="text-xl font-bold text-purple-600">
-                {orders.filter((o) => o.orderStatus === "shipped").length}
+                {orders.filter((o) => o?.orderStatus === "shipped").length}
               </p>
             </div>
             <div className="bg-white p-3.5 rounded-[8px] border border-neutral-300 space-y-1 shadow-sm">
               <span className="text-[11px] font-semibold text-neutral-500 uppercase">Delivered</span>
               <p className="text-xl font-bold text-emerald-600">
-                {orders.filter((o) => o.orderStatus === "delivered").length}
+                {orders.filter((o) => o?.orderStatus === "delivered").length}
               </p>
             </div>
             <div className="bg-white p-3.5 rounded-[8px] border border-neutral-300 space-y-1 shadow-sm">
               <span className="text-[11px] font-semibold text-neutral-500 uppercase">Total Revenue</span>
               <p className="text-xl font-bold text-neutral-900 font-mono">
-                {formatINR(orders.reduce((sum, o) => sum + o.totalAmount, 0))}
+                {formatINR(orders.reduce((sum, o) => sum + (Number(o?.totalAmount) || 0), 0))}
               </p>
             </div>
           </div>
@@ -2173,24 +2180,28 @@ function AdminDashboardContent() {
                           </td>
 
                           <td className="py-3 px-4 max-w-xs">
-                            <p className="font-bold text-neutral-900">{order.customerName}</p>
+                            <p className="font-bold text-neutral-900">{order.customerName || "Customer"}</p>
                             <p className="text-[11px] text-neutral-600 flex items-center gap-1 mt-0.5">
                               <Phone className="w-3 h-3 text-neutral-400" />
                               <a
-                                href={`tel:${order.customerPhone}`}
+                                href={`tel:${order.customerPhone || ""}`}
                                 className="hover:underline text-neutral-800 font-medium"
                               >
-                                +91 {order.customerPhone}
+                                +91 {order.customerPhone || "N/A"}
                               </a>
                             </p>
                             <p className="text-[11px] text-neutral-500 mt-0.5 line-clamp-2">
-                              {order.shippingAddress}, {order.shippingCity} ({order.shippingPincode})
+                              {typeof order.shippingAddress === "object" && order.shippingAddress !== null
+                                ? Object.values(order.shippingAddress).filter((v) => typeof v === "string").join(", ")
+                                : order.shippingAddress || "Standard Delivery"}
+                              {order.shippingCity ? `, ${order.shippingCity}` : ""}
+                              {order.shippingPincode ? ` (${order.shippingPincode})` : ""}
                             </p>
                           </td>
 
                           <td className="py-3 px-4">
                             <div className="space-y-1 max-w-sm">
-                              {order.items.map((item, idx) => (
+                              {(Array.isArray(order.items) ? order.items : []).map((item, idx) => (
                                 <div key={idx} className="text-[11px] text-neutral-800 flex items-start gap-1">
                                   <span className="font-mono font-bold text-neutral-900 bg-neutral-100 px-1 rounded text-[10px]">
                                     {item.sku || "RA-SKU"}

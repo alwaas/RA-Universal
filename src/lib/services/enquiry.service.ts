@@ -1,5 +1,5 @@
 import { desc, eq } from "drizzle-orm";
-import { db } from "@/db";
+import { db, isDatabaseAlive } from "@/db";
 import { enquiries } from "@/db/schema";
 import { PersistentStore } from "@/lib/storage/persistentStore";
 import type { EnquiryCreateInput } from "@/lib/validation/enquiry.schema";
@@ -87,7 +87,8 @@ export class EnquiryService {
       updatedAt: timestamp,
     };
 
-    if (db) {
+    const alive = await isDatabaseAlive();
+    if (alive && db) {
       try {
         const [record] = await db
           .insert(enquiries)
@@ -140,7 +141,8 @@ export class EnquiryService {
    */
   static async getEnquiries(): Promise<StoredEnquiryRecord[]> {
     const fileList = getStoredEnquiries();
-    if (db) {
+    const alive = await isDatabaseAlive();
+    if (alive && db) {
       try {
         const list = await db.query.enquiries.findMany({
           orderBy: [desc(enquiries.createdAt)],
@@ -188,7 +190,8 @@ export class EnquiryService {
     id: string,
     status: "new" | "contacted" | "closed"
   ): Promise<boolean> {
-    if (db) {
+    const alive = await isDatabaseAlive();
+    if (alive && db) {
       try {
         await db
           .update(enquiries)
@@ -215,7 +218,8 @@ export class EnquiryService {
    * Deletes an enquiry record.
    */
   static async deleteEnquiry(id: string): Promise<boolean> {
-    if (db) {
+    const alive = await isDatabaseAlive();
+    if (alive && db) {
       try {
         await db.delete(enquiries).where(eq(enquiries.id, id));
       } catch (err) {
