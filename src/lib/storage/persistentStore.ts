@@ -49,6 +49,25 @@ export class PersistentStore {
   }
 
   /**
+   * Reads data with default fallback if file is missing or empty.
+   */
+  static read<T>(filename: string, fallback: T): T {
+    const data = this.readJson<T>(filename);
+    if (data === null || data === undefined) {
+      this.writeJson(filename, fallback);
+      return fallback;
+    }
+    return data;
+  }
+
+  /**
+   * Convenient alias for writeJson.
+   */
+  static write<T>(filename: string, data: T): void {
+    this.writeJson(filename, data);
+  }
+
+  /**
    * Safely writes JSON data to disk atomically.
    */
   static writeJson<T>(filename: string, data: T): void {

@@ -3,13 +3,15 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { X, Trash2, ShoppingBag, Plus, Minus, MessageCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { X, Trash2, ShoppingBag, Plus, Minus, MessageCircle, ArrowRight } from "lucide-react";
 import { useCartStore } from "@/lib/store/useCartStore";
 import { formatINR } from "@/lib/formatters";
 import { Button } from "@/components/ui/Button";
 import { BuyNowInterceptModal } from "./BuyNowInterceptModal";
 
 export const CartDrawer: React.FC = () => {
+  const router = useRouter();
   const {
     items,
     isOpen,
@@ -236,14 +238,26 @@ export const CartDrawer: React.FC = () => {
               </div>
 
               <Button
-                variant="whatsapp"
+                variant="primary"
                 size="lg"
-                onClick={() => setShowInterceptModal(true)}
-                className="w-full flex items-center justify-center gap-2"
+                onClick={() => {
+                  closeCart();
+                  router.push("/checkout");
+                }}
+                className="w-full flex items-center justify-center gap-2 bg-brand-primary text-white hover:bg-brand-primary/95 shadow-sm"
               >
-                <MessageCircle className="w-5 h-5" />
-                <span>Confirm Order via WhatsApp</span>
+                <span>Proceed to Checkout</span>
+                <ArrowRight className="w-4 h-4" />
               </Button>
+
+              <button
+                type="button"
+                onClick={() => setShowInterceptModal(true)}
+                className="w-full text-center text-xs font-semibold text-emerald-700 hover:text-emerald-800 flex items-center justify-center gap-1.5 py-1 transition-colors"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span>Or Order via WhatsApp</span>
+              </button>
 
               <p className="text-center text-[10px] text-neutral-500">
                 Instant order confirmation with direct artisan weaver support.

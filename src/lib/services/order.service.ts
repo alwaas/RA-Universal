@@ -2,7 +2,8 @@ import { eq, desc, or, sql } from "drizzle-orm";
 import { db, isDatabaseAlive } from "@/db";
 import { orders } from "@/db/schema";
 import { PersistentStore } from "@/lib/storage/persistentStore";
-import type { Order, OrderStatus, PaymentStatus, OrderItem } from "@/types";
+import { ProductService } from "@/lib/services/product.service";
+import type { Order, OrderStatus, PaymentStatus, PaymentGateway, OrderItem } from "@/types";
 
 const STORAGE_KEY = "orders.json";
 
@@ -18,6 +19,15 @@ export interface CreateOrderInput {
   totalAmount: number;
   mrpTotal?: number;
   savingsTotal?: number;
+  shippingFee?: number;
+  couponCode?: string | null;
+  couponDiscount?: number;
+  paymentGateway?: PaymentGateway;
+  paymentStatus?: PaymentStatus;
+  orderStatus?: OrderStatus;
+  razorpayOrderId?: string | null;
+  razorpayPaymentId?: string | null;
+  razorpaySignature?: string | null;
   items: OrderItem[];
   notes?: string | null;
 }
@@ -164,8 +174,17 @@ function normalizeOrder(raw: any): Order {
     totalAmount: Number(raw.totalAmount || 0),
     mrpTotal: Number(raw.mrpTotal || raw.totalAmount || 0),
     savingsTotal: Number(raw.savingsTotal || 0),
+    shippingFee: Number(raw.shippingFee || 0),
+    couponCode: raw.couponCode ? String(raw.couponCode) : null,
+    couponDiscount: Number(raw.couponDiscount || 0),
+    paymentGateway: (raw.paymentGateway as PaymentGateway) || (raw.paymentStatus === "cod" ? "cod" : "razorpay"),
+    razorpayOrderId: raw.razorpayOrderId ? String(raw.razorpayOrderId) : null,
+    razorpayPaymentId: raw.razorpayPaymentId ? String(raw.razorpayPaymentId) : null,
+    razorpaySignature: raw.razorpaySignature ? String(raw.razorpaySignature) : null,
+    trackingCourier: raw.trackingCourier ? String(raw.trackingCourier) : null,
+    trackingNumber: raw.trackingNumber ? String(raw.trackingNumber) : null,
     orderStatus: (raw.orderStatus as OrderStatus) || "pending",
-    paymentStatus: (raw.paymentStatus as PaymentStatus) || "pending_whatsapp",
+    paymentStatus: (raw.paymentStatus as PaymentStatus) || (raw.paymentGateway === "cod" ? "cod" : "pending"),
     items: Array.isArray(raw.items) ? raw.items : Array.isArray(raw.itemsJson) ? raw.itemsJson : [],
     notes: raw.notes ? String(raw.notes) : null,
     createdAt: raw.createdAt ? new Date(raw.createdAt).toISOString() : new Date().toISOString(),
@@ -203,6 +222,11 @@ export class OrderService {
     const orderNumber = this.generateOrderNumber();
     const mrpTotal = input.mrpTotal ?? input.items.reduce((acc, i) => acc + (i.mrp || i.sellingPrice) * i.quantity, 0);
     const savingsTotal = input.savingsTotal ?? Math.max(0, mrpTotal - input.totalAmount);
+    const shippingFee = input.shippingFee ?? 0;
+    const couponDiscount = input.couponDiscount ?? 0;
+    const paymentGateway = input.paymentGateway || (input.paymentStatus === "cod" ? "cod" : "razorpay");
+    const orderStatus = input.orderStatus || "pending";
+    const paymentStatus = input.paymentStatus || (paymentGateway === "cod" ? "cod" : "pending");
 
     let addressStr = "";
     let cityStr = input.shippingCity || "";
@@ -237,8 +261,15 @@ export class OrderService {
             totalAmount: input.totalAmount.toString(),
             mrpTotal: mrpTotal.toString(),
             savingsTotal: savingsTotal.toString(),
-            orderStatus: "pending",
-            paymentStatus: "pending_whatsapp",
+            shippingFee: shippingFee.toString(),
+            couponCode: input.couponCode || null,
+            couponDiscount: couponDiscount.toString(),
+            paymentGateway,
+            razorpayOrderId: input.razorpayOrderId || null,
+            razorpayPaymentId: input.razorpayPaymentId || null,
+            razorpaySignature: input.razorpaySignature || null,
+            orderStatus,
+            paymentStatus,
             itemsJson: input.items,
             notes: input.notes || null,
           })
@@ -259,6 +290,15 @@ export class OrderService {
             totalAmount: Number(created.totalAmount),
             mrpTotal: Number(created.mrpTotal),
             savingsTotal: Number(created.savingsTotal),
+            shippingFee: Number(created.shippingFee),
+            couponCode: created.couponCode,
+            couponDiscount: Number(created.couponDiscount),
+            paymentGateway: created.paymentGateway as PaymentGateway,
+            razorpayOrderId: created.razorpayOrderId,
+            razorpayPaymentId: created.razorpayPaymentId,
+            razorpaySignature: created.razorpaySignature,
+            trackingCourier: created.trackingCourier,
+            trackingNumber: created.trackingNumber,
             orderStatus: created.orderStatus as OrderStatus,
             paymentStatus: created.paymentStatus as PaymentStatus,
             items: (created.itemsJson as OrderItem[]) || [],
@@ -269,6 +309,8 @@ export class OrderService {
 
           const current = getStoredOrders();
           saveStoredOrders([ord, ...current.filter((o) => o.id !== ord.id)]);
+          // Decrement inventory stock
+          ProductService.decrementStock(input.items).catch(() => {});
           return ord;
         }
       } catch (err) {
@@ -290,8 +332,15 @@ export class OrderService {
       totalAmount: input.totalAmount,
       mrpTotal,
       savingsTotal,
-      orderStatus: "pending",
-      paymentStatus: "pending_whatsapp",
+      shippingFee,
+      couponCode: input.couponCode || null,
+      couponDiscount,
+      paymentGateway,
+      razorpayOrderId: input.razorpayOrderId || null,
+      razorpayPaymentId: input.razorpayPaymentId || null,
+      razorpaySignature: input.razorpaySignature || null,
+      orderStatus,
+      paymentStatus,
       items: input.items,
       notes: input.notes || null,
       createdAt: new Date().toISOString(),
@@ -300,6 +349,8 @@ export class OrderService {
 
     const current = getStoredOrders();
     saveStoredOrders([newOrder, ...current.filter((o) => o.id !== newOrder.id)]);
+    // Decrement inventory stock
+    ProductService.decrementStock(input.items).catch(() => {});
     return newOrder;
   }
 
@@ -429,12 +480,14 @@ export class OrderService {
   }
 
   /**
-   * Updates an order's status or payment status.
+   * Updates an order's status, payment status, or courier tracking info.
    */
   static async updateOrderStatus(
     orderId: string,
     status?: OrderStatus,
-    paymentStatus?: PaymentStatus
+    paymentStatus?: PaymentStatus,
+    trackingCourier?: string,
+    trackingNumber?: string
   ): Promise<boolean> {
     const alive = await isDatabaseAlive();
     if (alive && db) {
@@ -442,6 +495,8 @@ export class OrderService {
         const updateData: any = { updatedAt: new Date() };
         if (status) updateData.orderStatus = status;
         if (paymentStatus) updateData.paymentStatus = paymentStatus;
+        if (trackingCourier !== undefined) updateData.trackingCourier = trackingCourier;
+        if (trackingNumber !== undefined) updateData.trackingNumber = trackingNumber;
 
         await db.update(orders).set(updateData).where(eq(orders.id, orderId));
       } catch (err) {
@@ -454,6 +509,8 @@ export class OrderService {
     if (order) {
       if (status) order.orderStatus = status;
       if (paymentStatus) order.paymentStatus = paymentStatus;
+      if (trackingCourier !== undefined) order.trackingCourier = trackingCourier;
+      if (trackingNumber !== undefined) order.trackingNumber = trackingNumber;
       order.updatedAt = new Date().toISOString();
       saveStoredOrders(current);
       return true;

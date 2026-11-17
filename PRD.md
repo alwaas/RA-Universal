@@ -84,25 +84,35 @@ Journey 3: B2B Wholesale Enquiry
 
 ## 4. Scope of the Product
 
-### 4.1 In-Scope (MVP Release)
-- Fully responsive web application optimized for mobile (Android/iOS browsers) and desktop.
-- 5 core public pages: Home, Collection/Shop, B2B, About Us, Contact.
-- Amazon/Flipkart-style product cards with complete pricing hierarchy (MRP, Discount %, Selling Price).
-- Dynamic admin-configurable corner badges: "Only 2-3 Left", "Sale", "Out of Stock", "Best Selling".
-- First-load dismissible promotional popup with session persistence.
-- Session-based / LocalStorage shopping cart with quantity controls.
-- Customer authentication module (Signup, Login, Logout, Profile, Order History placeholder).
-- Password-protected Admin Panel for Product, Offer, and Tag CRUD operations.
-- Intercepted "Buy Now" / Cart Checkout experience tailored for demo and lead-capture (WhatsApp/Enquiry intent).
+### 4.1 In-Scope (Phase 1 to Phase 4 Full E-Commerce Platform)
+- **Phase 1: Core E-Commerce & Checkout Engine**
+  - Direct multi-step checkout (`/checkout`) with address selection, delivery method, coupon codes, and order summary.
+  - Razorpay Payment Gateway integration (UPI, Indian Netbanking, RuPay/Cards) with server-side HMAC-SHA256 signature verification and webhook validation.
+  - Cash on Delivery (COD) payment option with instant inventory decrement and order reservation.
+  - Optional WhatsApp order placement fallback preserved alongside automated payments.
+  - Dynamic product catalog with advanced search auto-suggestions, category/price/color filters.
+  - Shopping Cart & Wishlist with real-time stock availability.
+- **Phase 2: Professional Admin Dashboard (CMS & Analytics)**
+  - Comprehensive dashboard: Total sales, orders, revenue graphs, active customers, average order value.
+  - Inventory tracking with low-stock alerts (`stockCount <= 3`).
+  - Order status pipeline: Pending → Confirmed → Packed → Shipped → Delivered → Cancelled.
+  - Amazon-standard A4 printable tax invoice generator.
+  - Coupon management: Create, toggle, edit discount codes (`FIRSTFREE`, percentage/flat discounts).
+  - B2B Lead & Wholesale Enquiry CRM with quote notes and status updates.
+- **Phase 3: Customer Experience & Retention**
+  - Customer reviews & 5-star ratings for verified purchases.
+  - Live order tracking timeline with visual status milestones.
+  - Interactive multi-angle product gallery with zoom and color swatch synchronization.
+  - Wishlist management (`/account/wishlist`) with single-click "Move to Cart".
+- **Phase 4: SEO, Security & Business Compliance**
+  - Dynamic `sitemap.xml` and `robots.txt` generation.
+  - Schema.org JSON-LD structured data for products, offers, and breadcrumbs.
+  - Complete business policy pages: Privacy Policy, Terms & Conditions, Shipping & Delivery Policy, Returns & Refund Policy.
+  - GST and invoice configuration with tax breakdowns.
 
-### 4.2 Out-of-Scope (Deferred to Phase 2)
-- Online payment gateway integration (Razorpay, Paytm, Cashfree, UPI Gateway, Stripe).
-- Automated payment reconciliation and refund management.
-- Courier/logistics aggregators (Shiprocket, Delhivery, BlueDart APIs) for auto-AWB generation.
-- Real-time live SMS OTP verification (mock/standard credential validation used in demo).
-- Automated inventory synchronization with physical warehouse software.
+### 4.2 Out-of-Scope (Future Enhancements)
 - Multi-vendor marketplace capabilities (single-vendor store only).
-- Native iOS or Android mobile applications.
+- Native iOS or Android mobile applications (PWA/mobile web supported).
 
 ---
 

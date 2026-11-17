@@ -1,9 +1,9 @@
 # Agent Instructions & Operational Rules (AGENTS.md)
 
-## Project: Demo E-Commerce Platform for Ethnic Apparel (Scarves, Dupattas & Gamchas)
+## Project: Full B2C & B2B E-Commerce Platform for Ethnic Apparel (Scarves, Dupattas & Gamchas)
 **Target:** AI Coding Agents & Pair-Programming Engineers  
 **Project Directory:** `d:\Projects\RA-Universal`  
-**Status:** Mandatory & Strictly Enforced  
+**Status:** Mandatory & Strictly Enforced (Phase 2 Full E-Commerce Approved)
 
 ---
 
@@ -11,14 +11,15 @@
 
 1. **Hierarchy of Truth:**  
    Always consult and strictly adhere to the project specification documents:
-   - [PRD.md](file:///d:/Projects/RA-Universal/PRD.md): Product scope, user journeys, feature requirements, and out-of-scope boundaries.
+   - [PRD.md](file:///d:/Projects/RA-Universal/PRD.md): Product scope, user journeys, feature requirements, and full e-commerce specifications.
    - [DESIGN.md](file:///d:/Projects/RA-Universal/DESIGN.md): Visual design tokens, 8pt spacing grid, typography, color palette, and component micro-layouts.
    - [TECH_SPEC.md](file:///d:/Projects/RA-Universal/TECH_SPEC.md): Tech stack (Next.js App Router, TypeScript, Tailwind, Drizzle, PostgreSQL), architecture, DB schemas, API contracts, and security rules.
-2. **Strict MVP Boundaries:**  
-   - **Payment Gateway is OUT OF SCOPE.** Do not integrate Razorpay, Stripe, Paytm, or any live payment processor.
-   - **Courier/Shipping APIs are OUT OF SCOPE.** Do not integrate Shiprocket, Delhivery, etc.
-   - **Never add unapproved features** (e.g., reviews/ratings system, multi-vendor marketplace, real-time chat, AI chatbots, complex analytics).
-   - If an instruction conflicts with `PRD.md`, stop and ask the user for clarification.
+2. **Approved Scope Boundaries (Phase 1 to Phase 4):**  
+   - **Payment Gateways IN-SCOPE:** Razorpay (UPI, Indian Netbanking, RuPay/Cards) with server-side HMAC-SHA256 signature verification and webhook validation, plus Cash on Delivery (COD). WhatsApp Checkout is preserved as an optional alternate flow.
+   - **Checkout Engine IN-SCOPE:** Multi-step checkout (`/checkout`) with saved address selection, courier delivery calculation, coupon discounts, and secure payment processing.
+   - **Order Lifecycle IN-SCOPE:** Real-time order pipeline (Pending → Confirmed → Packed → Shipped → Delivered → Cancelled) with customer timeline tracking and Amazon-style tax invoice generation.
+   - **Customer Experience IN-SCOPE:** Wishlist, verified purchase reviews & star ratings, auto-suggest search, and profile management.
+   - **Dual-Engine Architecture:** Zero-downtime persistence ensuring full functionality across live PostgreSQL (Neon/Supabase) and atomic local store (`.data/*.json`) when offline.
 
 ---
 

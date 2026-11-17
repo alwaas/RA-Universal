@@ -6,8 +6,10 @@ import { OrderService } from "@/lib/services/order.service";
 export const dynamic = "force-dynamic";
 
 const updateOrderSchema = z.object({
-  orderStatus: z.enum(["pending", "confirmed", "shipped", "delivered", "cancelled"]).optional(),
-  paymentStatus: z.enum(["pending_whatsapp", "paid", "cod"]).optional(),
+  orderStatus: z.enum(["pending", "confirmed", "packed", "shipped", "delivered", "cancelled"]).optional(),
+  paymentStatus: z.enum(["pending", "pending_whatsapp", "paid", "cod", "failed", "refunded"]).optional(),
+  trackingCourier: z.string().optional(),
+  trackingNumber: z.string().optional(),
 });
 
 export async function PATCH(
@@ -24,7 +26,9 @@ export async function PATCH(
     const success = await OrderService.updateOrderStatus(
       params.id,
       validated.orderStatus,
-      validated.paymentStatus
+      validated.paymentStatus,
+      validated.trackingCourier,
+      validated.trackingNumber
     );
 
     if (!success) {

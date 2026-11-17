@@ -11,7 +11,7 @@
     "sellingPrice": 899,
     "discountPercentage": 40,
     "status": "active",
-    "stockCount": 25,
+    "stockCount": 17,
     "images": [
       {
         "id": "img-1794643295770-0",
@@ -46,12 +46,12 @@
     "sellingPrice": 279,
     "discountPercentage": 44,
     "status": "active",
-    "stockCount": 3,
+    "stockCount": 0,
     "badge": {
-      "id": "tag-low-stock",
-      "name": "Only 2-3 Left",
-      "slug": "only-2-3-left",
-      "badgeColor": "orange"
+      "id": "bdg-out",
+      "name": "Out of Stock",
+      "slug": "out-of-stock",
+      "badgeColor": "gray"
     },
     "colors": [
       {
@@ -105,7 +105,7 @@
     "sellingPrice": 349,
     "discountPercentage": 42,
     "status": "active",
-    "stockCount": 14,
+    "stockCount": 7,
     "badge": {
       "id": "tag-sale",
       "name": "Sale",

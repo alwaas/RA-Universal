@@ -145,5 +145,138 @@
     "passwordHash": "$2a$12$T7w8XgD3YYs2HyPPZLL1qOtVijIs/kH23i1u2btLQG71.w/R8bQX6",
     "role": "customer",
     "createdAt": "2026-11-14T08:52:42.461Z"
+  },
+  {
+    "id": "user-1794897276169",
+    "fullName": "Meera Sen",
+    "phone": "7536864365",
+    "email": "meera_1794897275862@example.com",
+    "passwordHash": "$2a$12$nXweuTClpn.mowF82tPYP.CcLUjt4zXWgYy7/gU9nZanqtAFXk6i2",
+    "role": "customer",
+    "createdAt": "2026-11-17T06:34:36.169Z",
+    "addressCity": "Varanasi",
+    "addressPincode": "221001"
+  },
+  {
+    "id": "user-1794897291420",
+    "fullName": "QA Test User",
+    "phone": "9373248862",
+    "passwordHash": "$2a$12$tGX29tkxFRdtfUNx2PX0fuBe85vIQYCBo9daN17Wk2bOd/w6pFjXu",
+    "role": "customer",
+    "createdAt": "2026-11-17T06:34:51.420Z"
+  },
+  {
+    "id": "user-1794897586885",
+    "fullName": "Meera Sen",
+    "phone": "7113940872",
+    "email": "meera_1794897586589@example.com",
+    "passwordHash": "$2a$12$mC3l6536dVuSn00evZhfReL7pitxcnHxxd6ZGldgE0jza9KFGoL6W",
+    "role": "customer",
+    "createdAt": "2026-11-17T06:39:46.885Z",
+    "addressCity": "Varanasi",
+    "addressPincode": "221001"
+  },
+  {
+    "id": "user-1794897589633",
+    "fullName": "QA Test User",
+    "phone": "9306927242",
+    "passwordHash": "$2a$12$EpDnUR8E2RVKsu1etoklteHXprOwm7GZMxeFATpJ0Jtr7jtsV56ka",
+    "role": "customer",
+    "createdAt": "2026-11-17T06:39:49.633Z"
+  },
+  {
+    "id": "user-1794900849464",
+    "fullName": "Meera Sen",
+    "phone": "7827305802",
+    "email": "meera_1794900849124@example.com",
+    "passwordHash": "$2a$12$RHGnkElMCau/AOKGUxYk5OO3S/aRG31dw3vNYI1c/G/IGdtmzrsza",
+    "role": "customer",
+    "createdAt": "2026-11-17T07:34:09.464Z",
+    "addressCity": "Varanasi",
+    "addressPincode": "221001"
+  },
+  {
+    "id": "user-1794900896474",
+    "fullName": "QA Test User",
+    "phone": "9800638414",
+    "passwordHash": "$2a$12$xSZZJjMaRMo1i5VfYBeJzuItVGuxS8dFM89IScsbO/U.9GMNBqlUO",
+    "role": "customer",
+    "createdAt": "2026-11-17T07:34:56.474Z"
+  },
+  {
+    "id": "user-1794901069408",
+    "fullName": "Meera Sen",
+    "phone": "7748362854",
+    "email": "meera_1794901069116@example.com",
+    "passwordHash": "$2a$12$SgV390wSbTfZ2LQ.iEXQ/ehNIYz06bfV9Vzrhr7HZy4ytnhDP2ZJu",
+    "role": "customer",
+    "createdAt": "2026-11-17T07:37:49.408Z",
+    "addressCity": "Varanasi",
+    "addressPincode": "221001"
+  },
+  {
+    "id": "user-1794901072443",
+    "fullName": "QA Test User",
+    "phone": "9389115126",
+    "passwordHash": "$2a$12$hf/Clvm.v81L3YfbJXUpVen74/lSX8trosA74UPnMtIi/rL7R6wFW",
+    "role": "customer",
+    "createdAt": "2026-11-17T07:37:52.443Z"
+  },
+  {
+    "id": "user-1794909257868",
+    "fullName": "Meera Sen",
+    "phone": "7497815494",
+    "email": "meera_1794909257567@example.com",
+    "passwordHash": "$2a$12$EbkubzBTj1nvB1F3LV0Bh.VIy2a/2J0GPcI826jWg6i2Mf0M/lQDS",
+    "role": "customer",
+    "createdAt": "2026-11-17T09:54:17.868Z",
+    "addressCity": "Varanasi",
+    "addressPincode": "221001"
+  },
+  {
+    "id": "user-1794909261059",
+    "fullName": "QA Test User",
+    "phone": "9268971503",
+    "passwordHash": "$2a$12$TUYgMxZatFM4fhh21Sp4TuvBBXwz7FBsP4pTRAIrr9Jt6aH0.BnI2",
+    "role": "customer",
+    "createdAt": "2026-11-17T09:54:21.059Z"
+  },
+  {
+    "id": "user-1794910651410",
+    "fullName": "Meera Sen",
+    "phone": "7671601716",
+    "email": "meera_1794910650911@example.com",
+    "passwordHash": "$2a$12$8pnDAXFB6Mmj5ARKtZ2R7.iWD5wrRhER7Jpxiy1p52wg1JV2NQi6K",
+    "role": "customer",
+    "createdAt": "2026-11-17T10:17:31.410Z",
+    "addressCity": "Varanasi",
+    "addressPincode": "221001"
+  },
+  {
+    "id": "user-1794910655523",
+    "fullName": "QA Test User",
+    "phone": "9648263136",
+    "passwordHash": "$2a$12$1B2mc3.iDj9ilpfsKnWqn.eKxHkZpRJiWeNUss3kkvXfVZ3.R4rh.",
+    "role": "customer",
+    "createdAt": "2026-11-17T10:17:35.523Z"
+  },
+  {
+    "id": "user-1794913103921",
+    "fullName": "Meera Sen",
+    "phone": "7179089439",
+    "email": "meera_1794913103628@example.com",
+    "passwordHash": "$2a$12$rGYq2EoypA/z9DmdDbCQ/OojHjg9TINsIUh/2/2ZlsR4spbLU3IFK",
+    "role": "customer",
+    "createdAt": "2026-11-17T10:58:23.921Z",
+    "addressCity": "Varanasi",
+    "addressPincode": "221001"
+  },
+  {
+    "id": "user-1794913106698",
+    "fullName": "QA Test User",
+    "phone": "9904360110",
+    "passwordHash": "$2a$12$wx6yEKyvPC/IVXxS6/sSRuo12eWYGICmDkcAzzHiADeD3hyrke0cG",
+    "role": "customer",
+    "createdAt": "2026-11-17T10:58:26.698Z"
   }
 ]

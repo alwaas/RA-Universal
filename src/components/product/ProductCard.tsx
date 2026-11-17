@@ -1,13 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Heart, Star } from "lucide-react";
 import { PriceDisplay } from "./PriceDisplay";
 import { ColorSelector } from "./ColorSelector";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useCartStore } from "@/lib/store/useCartStore";
+import { useWishlistStore } from "@/lib/store/useWishlistStore";
 import { toast } from "@/lib/store/useToastStore";
 import type { Product, ProductColor } from "@/types";
 
@@ -23,8 +25,28 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const [selectedColor, setSelectedColor] = useState<ProductColor | undefined>(
     product.colors[0]
   );
+  const [isMounted, setIsMounted] = useState(false);
 
   const addItem = useCartStore((state) => state.addItem);
+  const { isInWishlist, toggleWishlist, loadWishlist, isLoaded } = useWishlistStore();
+
+  useEffect(() => {
+    setIsMounted(true);
+    if (!isLoaded) loadWishlist();
+  }, [isLoaded, loadWishlist]);
+
+  const inWishlist = isMounted && isInWishlist(product.id);
+
+  const handleToggleWishlist = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const added = await toggleWishlist(product.id);
+    if (added) {
+      toast.success(`Saved "${product.title}" to Wishlist!`);
+    } else {
+      toast.info(`Removed "${product.title}" from Wishlist`);
+    }
+  };
 
   const isOutOfStock =
     product.stockCount <= 0 || product.badge?.slug === "out-of-stock";
@@ -68,12 +90,30 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     <div className="group relative flex flex-col justify-between bg-white border border-neutral-300/80 rounded-[6px] overflow-hidden transition-all duration-200 hover:shadow-card-hover">
       {/* Pinned Corner Badge */}
       {product.badge && (
-        <div className="absolute top-2 left-0 z-10">
+        <div className="absolute top-2 left-0 z-10 pointer-events-none">
           <Badge color={product.badge.badgeColor} className="rounded-l-none pl-2.5 pr-2 py-0.5">
             {product.badge.name}
           </Badge>
         </div>
       )}
+
+      {/* Wishlist Button (Top Right) */}
+      <button
+        type="button"
+        onClick={handleToggleWishlist}
+        aria-label={inWishlist ? "Remove from wishlist" : "Save to wishlist"}
+        className={`absolute top-2 right-2 z-20 p-2 rounded-full backdrop-blur-md transition-all shadow-sm ${
+          inWishlist
+            ? "bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200"
+            : "bg-white/85 text-neutral-600 hover:text-rose-600 hover:bg-white border border-neutral-200/60"
+        }`}
+      >
+        <Heart
+          className={`w-4 h-4 transition-transform ${
+            inWishlist ? "fill-rose-500 text-rose-500 scale-110" : ""
+          }`}
+        />
+      </button>
 
       {/* Product Image Link */}
       <Link href={`/product/${product.slug}`} className="block relative w-full aspect-[3/4] bg-neutral-100 overflow-hidden">
@@ -115,11 +155,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               {product.title}
             </h3>
           </Link>
-          {product.sku && (
-            <span className="text-[10px] font-mono text-neutral-400 block mt-0.5">
-              ID: {product.sku}
-            </span>
-          )}
+          <div className="flex items-center justify-between gap-1 mt-1">
+            <div className="flex items-center gap-1">
+              <span className="inline-flex items-center gap-0.5 bg-amber-50 text-amber-900 text-[10px] font-bold px-1.5 py-0.5 rounded border border-amber-200/60">
+                <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-500" />
+                4.8
+              </span>
+              <span className="text-[10px] text-neutral-400 font-medium">Verified</span>
+            </div>
+            {product.sku && (
+              <span className="text-[10px] font-mono text-neutral-400">
+                #{product.sku.slice(-6)}
+              </span>
+            )}
+          </div>
 
           {/* Pricing Block */}
           <div className="mt-2.5">

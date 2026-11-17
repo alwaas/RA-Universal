@@ -44,14 +44,23 @@ export const enquiryStatusEnum = pgEnum("enquiry_status", [
 export const orderStatusEnum = pgEnum("order_status", [
   "pending",
   "confirmed",
+  "packed",
   "shipped",
   "delivered",
   "cancelled",
 ]);
 export const paymentStatusEnum = pgEnum("payment_status", [
+  "pending",
   "pending_whatsapp",
   "paid",
   "cod",
+  "failed",
+  "refunded",
+]);
+export const paymentGatewayEnum = pgEnum("payment_gateway", [
+  "razorpay",
+  "cod",
+  "whatsapp",
 ]);
 
 // ============================================================================
@@ -356,8 +365,17 @@ export const orders = pgTable(
     totalAmount: numeric("total_amount", { precision: 10, scale: 2 }).notNull(),
     mrpTotal: numeric("mrp_total", { precision: 10, scale: 2 }).notNull(),
     savingsTotal: numeric("savings_total", { precision: 10, scale: 2 }).default("0").notNull(),
+    shippingFee: numeric("shipping_fee", { precision: 10, scale: 2 }).default("0").notNull(),
+    couponCode: varchar("coupon_code", { length: 50 }),
+    couponDiscount: numeric("coupon_discount", { precision: 10, scale: 2 }).default("0").notNull(),
+    paymentGateway: paymentGatewayEnum("payment_gateway").default("cod").notNull(),
+    razorpayOrderId: varchar("razorpay_order_id", { length: 100 }),
+    razorpayPaymentId: varchar("razorpay_payment_id", { length: 100 }),
+    razorpaySignature: varchar("razorpay_signature", { length: 255 }),
+    trackingCourier: varchar("tracking_courier", { length: 100 }),
+    trackingNumber: varchar("tracking_number", { length: 100 }),
     orderStatus: orderStatusEnum("order_status").default("pending").notNull(),
-    paymentStatus: paymentStatusEnum("payment_status").default("pending_whatsapp").notNull(),
+    paymentStatus: paymentStatusEnum("payment_status").default("pending").notNull(),
     itemsJson: jsonb("items_json").notNull(),
     notes: text("notes"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -373,6 +391,133 @@ export const orders = pgTable(
 export const ordersRelations = relations(orders, ({ one }) => ({
   user: one(users, {
     fields: [orders.userId],
+    references: [users.id],
+  }),
+}));
+
+// ============================================================================
+// 12. USER SAVED ADDRESSES TABLE
+// ============================================================================
+export const userAddresses = pgTable(
+  "user_addresses",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    name: varchar("name", { length: 120 }).notNull(),
+    phone: varchar("phone", { length: 20 }).notNull(),
+    street: text("street").notNull(),
+    landmark: varchar("landmark", { length: 150 }),
+    city: varchar("city", { length: 100 }).notNull(),
+    state: varchar("state", { length: 100 }).notNull(),
+    pincode: varchar("pincode", { length: 10 }).notNull(),
+    isDefault: boolean("is_default").default(false).notNull(),
+    type: varchar("type", { length: 20 }).default("home").notNull(), // home, work, other
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    userAddressIdx: index("idx_user_addresses_user").on(table.userId),
+  })
+);
+
+export const userAddressesRelations = relations(userAddresses, ({ one }) => ({
+  user: one(users, {
+    fields: [userAddresses.userId],
+    references: [users.id],
+  }),
+}));
+
+// ============================================================================
+// 13. WISHLISTS TABLE
+// ============================================================================
+export const wishlists = pgTable(
+  "wishlists",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    productId: uuid("product_id")
+      .references(() => products.id, { onDelete: "cascade" })
+      .notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    userProductIdx: index("idx_wishlists_user_product").on(table.userId, table.productId),
+  })
+);
+
+export const wishlistsRelations = relations(wishlists, ({ one }) => ({
+  user: one(users, {
+    fields: [wishlists.userId],
+    references: [users.id],
+  }),
+  product: one(products, {
+    fields: [wishlists.productId],
+    references: [products.id],
+  }),
+}));
+
+// ============================================================================
+// 14. COUPONS TABLE
+// ============================================================================
+export const coupons = pgTable(
+  "coupons",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    code: varchar("code", { length: 50 }).notNull().unique(),
+    title: varchar("title", { length: 150 }).notNull(),
+    description: text("description"),
+    discountType: varchar("discount_type", { length: 20 }).default("percentage").notNull(), // percentage | flat
+    discountValue: numeric("discount_value", { precision: 10, scale: 2 }).notNull(),
+    minOrderAmount: numeric("min_order_amount", { precision: 10, scale: 2 }).default("0").notNull(),
+    maxDiscountAmount: numeric("max_discount_amount", { precision: 10, scale: 2 }),
+    usageLimit: integer("usage_limit"),
+    usedCount: integer("used_count").default(0).notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    couponCodeIdx: index("idx_coupons_code").on(table.code),
+  })
+);
+
+// ============================================================================
+// 15. PRODUCT REVIEWS & RATINGS TABLE
+// ============================================================================
+export const productReviews = pgTable(
+  "product_reviews",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    productId: uuid("product_id")
+      .references(() => products.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    customerName: varchar("customer_name", { length: 120 }).notNull(),
+    rating: integer("rating").notNull(), // 1 to 5
+    title: varchar("title", { length: 150 }),
+    comment: text("comment").notNull(),
+    isVerifiedPurchase: boolean("is_verified_purchase").default(false).notNull(),
+    isApproved: boolean("is_approved").default(true).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    productReviewIdx: index("idx_reviews_product").on(table.productId),
+  })
+);
+
+export const productReviewsRelations = relations(productReviews, ({ one }) => ({
+  product: one(products, {
+    fields: [productReviews.productId],
+    references: [products.id],
+  }),
+  user: one(users, {
+    fields: [productReviews.userId],
     references: [users.id],
   }),
 }));

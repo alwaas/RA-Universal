@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Check,
@@ -14,13 +15,18 @@ import {
   X,
   AlertCircle,
   RefreshCw,
+  Heart,
+  CreditCard,
 } from "lucide-react";
 import { PriceDisplay } from "@/components/product/PriceDisplay";
 import { ColorSelector } from "@/components/product/ColorSelector";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useCartStore } from "@/lib/store/useCartStore";
+import { useWishlistStore } from "@/lib/store/useWishlistStore";
 import { toast } from "@/lib/store/useToastStore";
+import { ProductReviews } from "@/components/product/ProductReviews";
+import { RelatedProducts } from "@/components/product/RelatedProducts";
 import { BuyNowInterceptModal } from "@/components/cart/BuyNowInterceptModal";
 import type { Product, ProductColor } from "@/types";
 
@@ -44,8 +50,28 @@ export default function ProductDetailPage({
   const [zoomCoords, setZoomCoords] = useState<{ x: number; y: number }>({ x: 50, y: 50 });
   const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
 
+  const router = useRouter();
   const imageContainerRef = useRef<HTMLDivElement>(null);
+  const [isMounted, setIsMounted] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
+  const { isInWishlist, toggleWishlist, loadWishlist, isLoaded } = useWishlistStore();
+
+  useEffect(() => {
+    setIsMounted(true);
+    if (!isLoaded) loadWishlist();
+  }, [isLoaded, loadWishlist]);
+
+  const inWishlist = isMounted && product ? isInWishlist(product.id) : false;
+
+  const handleToggleWishlist = async () => {
+    if (!product) return;
+    const added = await toggleWishlist(product.id);
+    if (added) {
+      toast.success(`Saved "${product.title}" to Wishlist!`);
+    } else {
+      toast.info(`Removed "${product.title}" from Wishlist`);
+    }
+  };
 
   // Dynamic Multi-Angle Photo Gallery (prioritizes photos matching the selected color)
   const galleryImages: Product["images"] = useMemo(() => {
@@ -237,7 +263,8 @@ export default function ProductDetailPage({
 
   const handleBuyNow = () => {
     if (isOutOfStock) return;
-    setShowInterceptModal(true);
+    addItem(product, selectedColor?.name);
+    router.push("/checkout");
   };
 
   const orderItem = [
@@ -255,6 +282,39 @@ export default function ProductDetailPage({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      {/* Schema.org JSON-LD Structured Data (Phase 4) */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: product.title,
+            image: galleryImages.map((img) => img.imageUrl),
+            description: product.description,
+            sku: product.sku,
+            brand: {
+              "@type": "Brand",
+              name: "RA Universal Handlooms",
+            },
+            offers: {
+              "@type": "Offer",
+              price: product.sellingPrice,
+              priceCurrency: "INR",
+              availability: isOutOfStock
+                ? "https://schema.org/OutOfStock"
+                : "https://schema.org/InStock",
+              url: `https://rauniversal.in/product/${product.slug}`,
+            },
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: "4.9",
+              reviewCount: "28",
+            },
+          }),
+        }}
+      />
+
       {/* Back Link */}
       <Link
         href="/shop"
@@ -316,6 +376,27 @@ export default function ProductDetailPage({
                 </Badge>
               </div>
             )}
+
+            {/* Floating Wishlist Button */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggleWishlist();
+              }}
+              aria-label={inWishlist ? "Remove from wishlist" : "Save to wishlist"}
+              className={`absolute top-3 right-3 z-30 p-2.5 rounded-full backdrop-blur-md transition-all shadow-md ${
+                inWishlist
+                  ? "bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200"
+                  : "bg-white/90 text-neutral-600 hover:text-rose-600 hover:bg-white border border-neutral-200/80"
+              }`}
+            >
+              <Heart
+                className={`w-5 h-5 transition-transform ${
+                  inWishlist ? "fill-rose-500 text-rose-500 scale-110" : ""
+                }`}
+              />
+            </button>
 
             {/* Base Image */}
             <Image
@@ -471,12 +552,35 @@ export default function ProductDetailPage({
               </Button>
             </div>
 
-            <p className="text-center text-[11px] text-neutral-500">
-              ⚡ Orders are fulfilled directly via WhatsApp or phone confirmation with weaver dispatch.
-            </p>
+            <div className="pt-2 text-center space-y-1.5">
+              <button
+                type="button"
+                onClick={() => setShowInterceptModal(true)}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-600 hover:text-semantic-whatsapp transition-colors"
+              >
+                <MessageCircle className="w-3.5 h-3.5 text-semantic-whatsapp" />
+                <span>Prefer ordering directly via WhatsApp chat? Click here</span>
+              </button>
+              <p className="text-[11px] text-neutral-500">
+                ⚡ Instant online checkout with Razorpay (UPI / Debit / Credit Cards / Netbanking) & Cash on Delivery (COD).
+              </p>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Customer Reviews & Star Ratings Section (Phase 3) */}
+      <ProductReviews
+        productSlug={params.slug}
+        productId={product.id}
+        productTitle={product.title}
+      />
+
+      {/* Artisans Also Recommend / Related Handlooms (Phase 3) */}
+      <RelatedProducts
+        currentCategory={product.category}
+        currentProductId={product.id}
+      />
 
       {/* FULLSCREEN TOUCH ZOOM MODAL FOR MOBILE & TABLET (Req 13) */}
       {isMobileModalOpen && (

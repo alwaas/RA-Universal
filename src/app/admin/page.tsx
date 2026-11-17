@@ -38,15 +38,23 @@ import {
   Download,
   Eye,
   MapPin,
+  Percent,
+  Truck,
+  BarChart3,
+  RotateCcw,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { AmazonInvoice } from "@/components/admin/AmazonInvoice";
+import { AdminReportsTab } from "@/components/admin/AdminReportsTab";
+import { AdminReturnsTab } from "@/components/admin/AdminReturnsTab";
+import { AdminSettingsTab } from "@/components/admin/AdminSettingsTab";
 import { toast } from "@/lib/store/useToastStore";
 import { formatINR } from "@/lib/formatters";
-import type { Product, ProductCategory, BadgeColor, Order, OrderStatus, CustomerProfile } from "@/types";
+import type { Product, ProductCategory, BadgeColor, Order, OrderStatus, CustomerProfile, Coupon } from "@/types";
 
 interface OfferState {
   id: string;
@@ -160,6 +168,27 @@ function AdminDashboardContent() {
   const [enquiries, setEnquiries] = useState<EnquiryItem[]>([]);
   const [isLoadingEnquiries, setIsLoadingEnquiries] = useState(false);
   const [enquiryStatusFilter, setEnquiryStatusFilter] = useState<string>("all");
+
+  // Coupons state (Phase 2)
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [isLoadingCoupons, setIsLoadingCoupons] = useState(false);
+  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
+  const [couponForm, setCouponForm] = useState({
+    code: "",
+    title: "",
+    description: "",
+    discountType: "percentage" as "percentage" | "flat",
+    discountValue: 10,
+    minOrderAmount: 499,
+    maxDiscountAmount: 200,
+  });
+
+  // Tracking Modal State
+  const [editingTrackingOrder, setEditingTrackingOrder] = useState<Order | null>(null);
+  const [trackingForm, setTrackingForm] = useState({
+    courier: "Delhivery",
+    awbNumber: "",
+  });
 
   // Real-Time Sync state & tracker refs
   const [isManualSyncing, setIsManualSyncing] = useState(false);
@@ -289,6 +318,22 @@ function AdminDashboardContent() {
     }
   };
 
+  // Load Coupons
+  const fetchCoupons = async (isSilent = false) => {
+    try {
+      if (!isSilent) setIsLoadingCoupons(true);
+      const res = await fetch("/api/admin/coupons");
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        setCoupons(data.data);
+      }
+    } catch {
+      console.warn("Could not fetch coupons");
+    } finally {
+      if (!isSilent) setIsLoadingCoupons(false);
+    }
+  };
+
   // Synchronize all sections
   const syncAll = async (isSilent = false) => {
     if (!isSilent) setIsManualSyncing(true);
@@ -297,6 +342,7 @@ function AdminDashboardContent() {
       fetchOrders(isSilent),
       fetchEnquiries(isSilent),
       fetchCustomers(isSilent),
+      fetchCoupons(isSilent),
       fetchOffer(),
     ]);
     if (!isSilent) {
@@ -355,17 +401,116 @@ function AdminDashboardContent() {
     }
   };
 
-  // Update Order Status
-  const handleUpdateOrderStatus = async (orderId: string, newStatus: OrderStatus) => {
+  // Coupon Management Handlers (Phase 2)
+  const handleCreateCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!couponForm.code.trim()) {
+      toast.error("Coupon code is required");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/admin/coupons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: couponForm.code.toUpperCase().trim(),
+          title: couponForm.title.trim() || `Discount ${couponForm.code}`,
+          description: couponForm.description.trim() || undefined,
+          discountType: couponForm.discountType,
+          discountValue: Number(couponForm.discountValue),
+          minOrderAmount: Number(couponForm.minOrderAmount) || 0,
+          maxDiscountAmount:
+            couponForm.discountType === "percentage" && couponForm.maxDiscountAmount
+              ? Number(couponForm.maxDiscountAmount)
+              : undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(`Coupon "${couponForm.code.toUpperCase()}" created successfully!`);
+        setIsCouponModalOpen(false);
+        setCouponForm({
+          code: "",
+          title: "",
+          description: "",
+          discountType: "percentage",
+          discountValue: 10,
+          minOrderAmount: 499,
+          maxDiscountAmount: 200,
+        });
+        fetchCoupons();
+      } else {
+        toast.error(data.error?.message || "Failed to create coupon.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Network error creating coupon");
+    }
+  };
+
+  const handleToggleCoupon = async (couponId: string, currentActive: boolean) => {
+    try {
+      const res = await fetch(`/api/admin/coupons/${couponId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !currentActive }),
+      });
+      if (res.ok) {
+        toast.success(`Coupon ${!currentActive ? "activated" : "deactivated"}!`);
+        setCoupons((prev) =>
+          prev.map((c) => (c.id === couponId ? { ...c, isActive: !currentActive } : c))
+        );
+      }
+    } catch {
+      toast.error("Failed to toggle coupon.");
+    }
+  };
+
+  const handleDeleteCoupon = async (couponId: string) => {
+    if (!confirm("Are you sure you want to delete this coupon?")) return;
+    try {
+      const res = await fetch(`/api/admin/coupons/${couponId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        toast.success("Coupon deleted!");
+        setCoupons((prev) => prev.filter((c) => c.id !== couponId));
+      }
+    } catch {
+      toast.error("Failed to delete coupon.");
+    }
+  };
+
+  // Update Order Status & Courier Tracking (Phase 2)
+  const handleUpdateOrderStatus = async (
+    orderId: string,
+    newStatus: OrderStatus,
+    trackingCourier?: string,
+    trackingNumber?: string
+  ) => {
     try {
       setOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? { ...o, orderStatus: newStatus } : o))
+        prev.map((o) =>
+          o.id === orderId
+            ? {
+                ...o,
+                orderStatus: newStatus,
+                ...(trackingCourier !== undefined ? { trackingCourier } : {}),
+                ...(trackingNumber !== undefined ? { trackingNumber } : {}),
+              }
+            : o
+        )
       );
 
       const res = await fetch(`/api/admin/orders/${orderId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderStatus: newStatus }),
+        body: JSON.stringify({
+          orderStatus: newStatus,
+          trackingCourier,
+          trackingNumber,
+        }),
       });
 
       if (res.ok) {
@@ -378,6 +523,18 @@ function AdminDashboardContent() {
       toast.error("Network error while updating order status.");
       fetchOrders();
     }
+  };
+
+  const handleSaveTracking = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTrackingOrder) return;
+    await handleUpdateOrderStatus(
+      editingTrackingOrder.id,
+      editingTrackingOrder.orderStatus,
+      trackingForm.courier,
+      trackingForm.awbNumber
+    );
+    setEditingTrackingOrder(null);
   };
 
   // Multi-select & Bulk Print helpers
@@ -1150,6 +1307,18 @@ function AdminDashboardContent() {
               <span>Print Selected Bills ({selectedOrderIds.size})</span>
             </Button>
           )}
+
+          {activeTab === "coupons" && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setIsCouponModalOpen(true)}
+              className="flex items-center gap-1.5 bg-purple-700 hover:bg-purple-800 text-white"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Create Coupon</span>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -1197,6 +1366,18 @@ function AdminDashboardContent() {
         </Link>
 
         <Link
+          href="/admin?tab=coupons"
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-[6px] transition-colors whitespace-nowrap ${
+            activeTab === "coupons"
+              ? "bg-neutral-900 text-white"
+              : "bg-white text-neutral-700 border border-neutral-200 hover:bg-neutral-50"
+          }`}
+        >
+          <Percent className="w-4 h-4 text-purple-600" />
+          <span>Coupons & Promos ({coupons.length})</span>
+        </Link>
+
+        <Link
           href="/admin?tab=offers"
           className={`flex items-center gap-2 px-3.5 py-2 rounded-[6px] transition-colors whitespace-nowrap ${
             activeTab === "offers"
@@ -1230,6 +1411,42 @@ function AdminDashboardContent() {
         >
           <MessageSquare className="w-4 h-4 text-semantic-whatsapp" />
           <span>B2B Enquiries ({enquiries.length})</span>
+        </Link>
+
+        <Link
+          href="/admin?tab=reports"
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-[6px] transition-colors whitespace-nowrap ${
+            activeTab === "reports"
+              ? "bg-neutral-900 text-white"
+              : "bg-white text-neutral-700 border border-neutral-200 hover:bg-neutral-50"
+          }`}
+        >
+          <BarChart3 className="w-4 h-4 text-blue-500" />
+          <span>Sales & Analytics</span>
+        </Link>
+
+        <Link
+          href="/admin?tab=returns"
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-[6px] transition-colors whitespace-nowrap ${
+            activeTab === "returns"
+              ? "bg-neutral-900 text-white"
+              : "bg-white text-neutral-700 border border-neutral-200 hover:bg-neutral-50"
+          }`}
+        >
+          <RotateCcw className="w-4 h-4 text-amber-500" />
+          <span>Returns & Replacements</span>
+        </Link>
+
+        <Link
+          href="/admin?tab=settings"
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-[6px] transition-colors whitespace-nowrap ${
+            activeTab === "settings"
+              ? "bg-neutral-900 text-white"
+              : "bg-white text-neutral-700 border border-neutral-200 hover:bg-neutral-50"
+          }`}
+        >
+          <Settings className="w-4 h-4 text-neutral-500" />
+          <span>Store Settings</span>
         </Link>
 
         <Link
@@ -1511,6 +1728,142 @@ function AdminDashboardContent() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ================================================================== */}
+      {/* TAB: COUPONS & DISCOUNT CODES (Phase 2) */}
+      {/* ================================================================== */}
+      {activeTab === "coupons" && (
+        <div className="space-y-6">
+          {/* Coupon Metrics */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-white p-4 rounded-[8px] border border-neutral-300 shadow-sm space-y-1">
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase">Total Coupons</span>
+              <p className="text-2xl font-bold text-neutral-900">{coupons.length}</p>
+            </div>
+            <div className="bg-white p-4 rounded-[8px] border border-neutral-300 shadow-sm space-y-1">
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase">Active Promos</span>
+              <p className="text-2xl font-bold text-emerald-600">{coupons.filter((c) => c.isActive).length}</p>
+            </div>
+            <div className="bg-white p-4 rounded-[8px] border border-neutral-300 shadow-sm space-y-1">
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase">Percentage Discounts</span>
+              <p className="text-2xl font-bold text-purple-600">
+                {coupons.filter((c) => c.discountType === "percentage").length}
+              </p>
+            </div>
+            <div className="bg-white p-4 rounded-[8px] border border-neutral-300 shadow-sm space-y-1">
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase">Flat Reductions</span>
+              <p className="text-2xl font-bold text-blue-600">
+                {coupons.filter((c) => c.discountType === "flat").length}
+              </p>
+            </div>
+          </div>
+
+          {/* Coupons Table Card */}
+          <div className="bg-white border border-neutral-300 rounded-[8px] overflow-hidden shadow-sm">
+            <div className="p-4 border-b border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="font-serif text-lg font-bold text-neutral-900">
+                  Promotional Coupon Codes ({coupons.length})
+                </h2>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Dynamic discount codes validated server-side during multi-step checkout.
+                </p>
+              </div>
+
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setIsCouponModalOpen(true)}
+                className="flex items-center gap-1.5 bg-neutral-900 hover:bg-neutral-800 text-white self-start sm:self-auto"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Promo Code</span>
+              </Button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-neutral-100 border-b border-neutral-200 text-neutral-700 font-semibold uppercase tracking-wider">
+                    <th className="py-3 px-4">Coupon Code</th>
+                    <th className="py-3 px-4">Title & Details</th>
+                    <th className="py-3 px-4">Discount Value</th>
+                    <th className="py-3 px-4">Min Order</th>
+                    <th className="py-3 px-4">Max Cap</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-200 text-neutral-800">
+                  {isLoadingCoupons ? (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-neutral-500">
+                        Loading coupons...
+                      </td>
+                    </tr>
+                  ) : coupons.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-neutral-500">
+                        No coupons found. Create your first discount promo above!
+                      </td>
+                    </tr>
+                  ) : (
+                    coupons.map((coupon) => (
+                      <tr key={coupon.id} className="hover:bg-neutral-50 transition-colors">
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span className="font-mono font-bold text-xs bg-purple-50 text-purple-700 border border-purple-200 px-2 py-1 rounded">
+                            {coupon.code}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <p className="font-bold text-neutral-900">{coupon.title}</p>
+                          {coupon.description && (
+                            <p className="text-[11px] text-neutral-500 mt-0.5">{coupon.description}</p>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap font-bold text-neutral-800">
+                          {coupon.discountType === "percentage"
+                            ? `${coupon.discountValue}% OFF`
+                            : `₹${coupon.discountValue} FLAT`}
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap font-mono">
+                          {coupon.minOrderAmount ? `₹${coupon.minOrderAmount}` : "None"}
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap font-mono text-neutral-500">
+                          {coupon.maxDiscountAmount ? `₹${coupon.maxDiscountAmount}` : "No Limit"}
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleCoupon(coupon.id, coupon.isActive)}
+                            className={`px-2.5 py-1 text-[11px] font-bold rounded-full transition-colors ${
+                              coupon.isActive
+                                ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                                : "bg-neutral-200 text-neutral-600 hover:bg-neutral-300"
+                            }`}
+                          >
+                            {coupon.isActive ? "Active" : "Disabled"}
+                          </button>
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap text-right">
+                          <button
+                            type="button"
+                            title="Delete Coupon"
+                            onClick={() => handleDeleteCoupon(coupon.id)}
+                            className="p-1.5 text-neutral-500 hover:text-red-600 rounded hover:bg-neutral-100 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1966,12 +2319,27 @@ function AdminDashboardContent() {
       )}
 
       {/* ================================================================== */}
+      {/* TAB: SALES REPORTS & ANALYTICS (Phase 2 & 4) */}
+      {/* ================================================================== */}
+      {activeTab === "reports" && <AdminReportsTab />}
+
+      {/* ================================================================== */}
+      {/* TAB: RETURNS & REPLACEMENTS (Phase 3) */}
+      {/* ================================================================== */}
+      {activeTab === "returns" && <AdminReturnsTab />}
+
+      {/* ================================================================== */}
+      {/* TAB: STORE & LOGISTICS SETTINGS (Phase 2 & 4) */}
+      {/* ================================================================== */}
+      {activeTab === "settings" && <AdminSettingsTab />}
+
+      {/* ================================================================== */}
       {/* TAB 6: ORDERS MANAGEMENT & AMAZON INVOICING */}
       {/* ================================================================== */}
       {activeTab === "orders" && (
         <div className="space-y-6">
           {/* Order Metrics Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-3">
             <div className="bg-white p-3.5 rounded-[8px] border border-neutral-300 space-y-1 shadow-sm">
               <span className="text-[11px] font-semibold text-neutral-500 uppercase">Total Orders</span>
               <p className="text-xl font-bold text-neutral-900">{orders.length}</p>
@@ -1989,6 +2357,12 @@ function AdminDashboardContent() {
               </p>
             </div>
             <div className="bg-white p-3.5 rounded-[8px] border border-neutral-300 space-y-1 shadow-sm">
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase">Packed</span>
+              <p className="text-xl font-bold text-indigo-600">
+                {orders.filter((o) => o?.orderStatus === "packed").length}
+              </p>
+            </div>
+            <div className="bg-white p-3.5 rounded-[8px] border border-neutral-300 space-y-1 shadow-sm">
               <span className="text-[11px] font-semibold text-neutral-500 uppercase">Shipped</span>
               <p className="text-xl font-bold text-purple-600">
                 {orders.filter((o) => o?.orderStatus === "shipped").length}
@@ -2000,7 +2374,7 @@ function AdminDashboardContent() {
                 {orders.filter((o) => o?.orderStatus === "delivered").length}
               </p>
             </div>
-            <div className="bg-white p-3.5 rounded-[8px] border border-neutral-300 space-y-1 shadow-sm">
+            <div className="bg-white p-3.5 rounded-[8px] border border-neutral-300 space-y-1 shadow-sm col-span-2 sm:col-span-1">
               <span className="text-[11px] font-semibold text-neutral-500 uppercase">Total Revenue</span>
               <p className="text-xl font-bold text-neutral-900 font-mono">
                 {formatINR(orders.reduce((sum, o) => sum + (Number(o?.totalAmount) || 0), 0))}
@@ -2043,6 +2417,7 @@ function AdminDashboardContent() {
                   <option value="all">All Statuses</option>
                   <option value="pending">Pending</option>
                   <option value="confirmed">Confirmed</option>
+                  <option value="packed">Packed</option>
                   <option value="shipped">Shipped</option>
                   <option value="delivered">Delivered</option>
                   <option value="cancelled">Cancelled</option>
@@ -2125,17 +2500,20 @@ function AdminDashboardContent() {
                   ) : (
                     filteredOrders.map((order) => {
                       const isSelected = selectedOrderIds.has(order.id);
-                      const formattedDate = new Date(order.createdAt).toLocaleDateString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      });
+                      const formattedDate = order.createdAt
+                        ? new Date(order.createdAt).toLocaleDateString("en-IN", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "N/A";
 
                       const statusColors: Record<string, string> = {
                         pending: "bg-amber-100 text-amber-800 border-amber-300",
                         confirmed: "bg-blue-100 text-blue-800 border-blue-300",
+                        packed: "bg-indigo-100 text-indigo-800 border-indigo-300",
                         shipped: "bg-purple-100 text-purple-800 border-purple-300",
                         delivered: "bg-emerald-100 text-emerald-800 border-emerald-300",
                         cancelled: "bg-red-100 text-red-800 border-red-300",
@@ -2197,6 +2575,12 @@ function AdminDashboardContent() {
                               {order.shippingCity ? `, ${order.shippingCity}` : ""}
                               {order.shippingPincode ? ` (${order.shippingPincode})` : ""}
                             </p>
+                            {order.trackingNumber && (
+                              <span className="text-[10px] bg-neutral-100 text-neutral-700 px-1.5 py-0.5 rounded font-mono inline-flex items-center gap-1 mt-1 border border-neutral-200">
+                                <Truck className="w-3 h-3 text-brand-primary" />
+                                <span>{order.trackingCourier || "Courier"}: {order.trackingNumber}</span>
+                              </span>
+                            )}
                           </td>
 
                           <td className="py-3 px-4">
@@ -2219,7 +2603,11 @@ function AdminDashboardContent() {
                               {formatINR(order.totalAmount)}
                             </span>
                             <span className="block text-[10px] text-neutral-500 uppercase font-medium">
-                              {order.paymentStatus === "paid" ? "Paid" : "WhatsApp COD"}
+                              {order.paymentStatus === "paid"
+                                ? "Paid"
+                                : order.paymentGateway === "cod"
+                                ? "Cash on Delivery"
+                                : "WhatsApp COD"}
                             </span>
                           </td>
 
@@ -2235,6 +2623,7 @@ function AdminDashboardContent() {
                             >
                               <option value="pending">Pending</option>
                               <option value="confirmed">Confirmed</option>
+                              <option value="packed">Packed</option>
                               <option value="shipped">Shipped</option>
                               <option value="delivered">Delivered</option>
                               <option value="cancelled">Cancelled</option>
@@ -2242,7 +2631,24 @@ function AdminDashboardContent() {
                           </td>
 
                           <td className="py-3 px-4 text-right">
-                            <div className="flex items-center justify-end gap-2">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {/* Courier Tracking Button */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingTrackingOrder(order);
+                                  setTrackingForm({
+                                    courier: order.trackingCourier || "Delhivery",
+                                    awbNumber: order.trackingNumber || "",
+                                  });
+                                }}
+                                className="px-2 py-1 bg-white hover:bg-neutral-100 text-neutral-700 border border-neutral-300 rounded-[4px] font-semibold text-[11px] flex items-center gap-1 shadow-xs transition-colors"
+                                title="Update Courier / AWB Tracking"
+                              >
+                                <Truck className="w-3.5 h-3.5 text-neutral-500" />
+                                <span>Track</span>
+                              </button>
+
                               {/* Print Amazon Bill Button */}
                               <button
                                 type="button"
@@ -2251,14 +2657,14 @@ function AdminDashboardContent() {
                                 title="Generate Amazon Standard Tax Bill PDF"
                               >
                                 <Printer className="w-3.5 h-3.5" />
-                                <span>Amazon Bill</span>
+                                <span>Bill</span>
                               </button>
 
                               {/* WhatsApp Direct Contact */}
                               <a
-                                href={`https://wa.me/91${order.customerPhone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
-                                  `Namaste ${order.customerName},\nRegarding your RA Heritage order #${order.orderNumber} for ${formatINR(
-                                    order.totalAmount
+                                href={`https://wa.me/91${(order.customerPhone || "").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
+                                  `Namaste ${order.customerName || "Customer"},\nRegarding your RA Heritage order #${order.orderNumber || ""} for ${formatINR(
+                                    order.totalAmount || 0
                                   )}.\nWe are preparing your authentic handloom parcel for dispatch!`
                                 )}`}
                                 target="_blank"
@@ -3186,6 +3592,170 @@ function AdminDashboardContent() {
               </Button>
             </div>
           </div>
+        </Modal>
+      )}
+
+      {/* ================================================================== */}
+      {/* MODAL: CREATE COUPON (Phase 2) */}
+      {/* ================================================================== */}
+      <Modal
+        isOpen={isCouponModalOpen}
+        onClose={() => setIsCouponModalOpen(false)}
+        title="Create New Promotional Coupon"
+      >
+        <form onSubmit={handleCreateCoupon} className="space-y-4 text-xs">
+          <div>
+            <label className="block font-semibold text-neutral-700 mb-1">Coupon Code *</label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. SUMMER25"
+              value={couponForm.code}
+              onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value.toUpperCase() })}
+              className="w-full uppercase font-mono tracking-wider px-3 py-2 border border-neutral-300 rounded-[6px] focus:outline-none focus:border-brand-primary"
+            />
+          </div>
+
+          <div>
+            <label className="block font-semibold text-neutral-700 mb-1">Title *</label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Summer Handloom Weaves Special"
+              value={couponForm.title}
+              onChange={(e) => setCouponForm({ ...couponForm, title: e.target.value })}
+              className="w-full px-3 py-2 border border-neutral-300 rounded-[6px] focus:outline-none focus:border-brand-primary"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-semibold text-neutral-700 mb-1">Discount Type *</label>
+              <select
+                value={couponForm.discountType}
+                onChange={(e) =>
+                  setCouponForm({
+                    ...couponForm,
+                    discountType: e.target.value as "percentage" | "flat",
+                  })
+                }
+                className="w-full px-3 py-2 border border-neutral-300 rounded-[6px] focus:outline-none focus:border-brand-primary bg-white"
+              >
+                <option value="percentage">Percentage (% OFF)</option>
+                <option value="flat">Flat Amount (₹ OFF)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-neutral-700 mb-1">Discount Value *</label>
+              <input
+                type="number"
+                required
+                min={1}
+                value={couponForm.discountValue}
+                onChange={(e) => setCouponForm({ ...couponForm, discountValue: Number(e.target.value) })}
+                className="w-full px-3 py-2 border border-neutral-300 rounded-[6px] focus:outline-none focus:border-brand-primary"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-semibold text-neutral-700 mb-1">Min Order Amount (₹)</label>
+              <input
+                type="number"
+                min={0}
+                value={couponForm.minOrderAmount}
+                onChange={(e) => setCouponForm({ ...couponForm, minOrderAmount: Number(e.target.value) })}
+                className="w-full px-3 py-2 border border-neutral-300 rounded-[6px] focus:outline-none focus:border-brand-primary"
+              />
+            </div>
+
+            {couponForm.discountType === "percentage" && (
+              <div>
+                <label className="block font-semibold text-neutral-700 mb-1">Max Cap (₹)</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={couponForm.maxDiscountAmount}
+                  onChange={(e) => setCouponForm({ ...couponForm, maxDiscountAmount: Number(e.target.value) })}
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-[6px] focus:outline-none focus:border-brand-primary"
+                />
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="block font-semibold text-neutral-700 mb-1">Description (Optional)</label>
+            <input
+              type="text"
+              placeholder="e.g. Applicable on all Banarasi and Jamdani dupattas"
+              value={couponForm.description}
+              onChange={(e) => setCouponForm({ ...couponForm, description: e.target.value })}
+              className="w-full px-3 py-2 border border-neutral-300 rounded-[6px] focus:outline-none focus:border-brand-primary"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-neutral-200">
+            <Button type="button" variant="outline" size="sm" onClick={() => setIsCouponModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary" size="sm" className="bg-brand-primary text-white">
+              Save Coupon
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ================================================================== */}
+      {/* MODAL: COURIER TRACKING (Phase 2) */}
+      {/* ================================================================== */}
+      {editingTrackingOrder && (
+        <Modal
+          isOpen={!!editingTrackingOrder}
+          onClose={() => setEditingTrackingOrder(null)}
+          title={`Update Courier Tracking - #${editingTrackingOrder.orderNumber}`}
+        >
+          <form onSubmit={handleSaveTracking} className="space-y-4 text-xs">
+            <div>
+              <label className="block font-semibold text-neutral-700 mb-1">Courier Partner *</label>
+              <select
+                value={trackingForm.courier}
+                onChange={(e) => setTrackingForm({ ...trackingForm, courier: e.target.value })}
+                className="w-full px-3 py-2 border border-neutral-300 rounded-[6px] focus:outline-none focus:border-brand-primary bg-white"
+              >
+                <option value="Delhivery">Delhivery</option>
+                <option value="Blue Dart">Blue Dart</option>
+                <option value="DTDC">DTDC</option>
+                <option value="India Post (Speed Post)">India Post (Speed Post)</option>
+                <option value="Shiprocket Express">Shiprocket Express</option>
+                <option value="Shadowfax">Shadowfax</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-neutral-700 mb-1">
+                AWB / Consignment Tracking Number *
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. DEL789123456IN"
+                value={trackingForm.awbNumber}
+                onChange={(e) => setTrackingForm({ ...trackingForm, awbNumber: e.target.value })}
+                className="w-full font-mono px-3 py-2 border border-neutral-300 rounded-[6px] focus:outline-none focus:border-brand-primary"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-neutral-200">
+              <Button type="button" variant="outline" size="sm" onClick={() => setEditingTrackingOrder(null)}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="primary" size="sm" className="bg-brand-primary text-white">
+                Save Tracking Info
+              </Button>
+            </div>
+          </form>
         </Modal>
       )}
     </div>

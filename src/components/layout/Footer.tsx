@@ -112,9 +112,23 @@ export const Footer: React.FC = () => {
             <h5 className="text-xs font-bold uppercase tracking-wider text-white mb-3">
               Customer Support
             </h5>
-            <p className="text-xs text-neutral-400 mb-3">
-              Need assistance with product selection, wholesale inquiries, or custom orders?
-            </p>
+            <ul className="space-y-2 text-xs mb-4">
+              <li>
+                <Link href="/tracking" className="hover:text-white transition-colors">
+                  Track Order Pipeline
+                </Link>
+              </li>
+              <li>
+                <Link href="/returns" className="hover:text-white transition-colors">
+                  7-Day Return / Replacement
+                </Link>
+              </li>
+              <li>
+                <Link href="/account/wishlist" className="hover:text-white transition-colors">
+                  My Saved Wishlist
+                </Link>
+              </li>
+            </ul>
             <a
               href="https://wa.me/917388553867"
               target="_blank"
@@ -127,9 +141,27 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="pt-8 border-t border-neutral-800 text-center text-xs text-neutral-500">
-          <p>© {new Date().getFullYear()} RA Universal. Handcrafted in India. All rights reserved.</p>
+        {/* Bottom Bar & Legal Compliance Links */}
+        <div className="pt-8 border-t border-neutral-800 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-neutral-500">
+          <p>© {new Date().getFullYear()} RA Universal Handlooms. Handcrafted in India. All rights reserved.</p>
+
+          <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-neutral-400">
+            <Link href="/privacy-policy" className="hover:text-white transition-colors">
+              Privacy Policy
+            </Link>
+            <span>•</span>
+            <Link href="/terms" className="hover:text-white transition-colors">
+              Terms & Conditions
+            </Link>
+            <span>•</span>
+            <Link href="/shipping-policy" className="hover:text-white transition-colors">
+              Shipping & Delivery
+            </Link>
+            <span>•</span>
+            <Link href="/return-refund-policy" className="hover:text-white transition-colors">
+              Returns & Refunds
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

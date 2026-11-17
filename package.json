@@ -10,6 +10,8 @@
     "type-check": "tsc --noEmit",
     "test": "tsx src/lib/__tests__/backend.test.ts",
     "test:qa": "tsx src/lib/__tests__/qa_suite.test.ts",
+    "test:ecom": "tsx src/lib/__tests__/ecommerce_suite.test.ts",
+    "test:all": "tsx src/lib/__tests__/backend.test.ts && tsx src/lib/__tests__/qa_suite.test.ts && tsx src/lib/__tests__/ecommerce_suite.test.ts",
     "db:push": "drizzle-kit push",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:generate": "drizzle-kit generate",

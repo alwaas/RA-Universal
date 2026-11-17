@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Trash2, ShoppingBag, Plus, Minus, MessageCircle, ArrowRight } from "lucide-react";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { BuyNowInterceptModal } from "@/components/cart/BuyNowInterceptModal";
 
 export default function CartPage() {
+  const [isMounted, setIsMounted] = useState(false);
   const {
     items,
     removeItem,
@@ -21,6 +22,10 @@ export default function CartPage() {
   } = useCartStore();
 
   const [showInterceptModal, setShowInterceptModal] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const totalCount = getTotalCount();
   const totalMrp = getTotalMrp();
@@ -40,6 +45,21 @@ export default function CartPage() {
     quantity: i.quantity,
     price: i.sellingPrice,
   }));
+
+  if (!isMounted) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-pulse space-y-6">
+        <div className="h-8 bg-neutral-200 rounded w-48" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-4">
+            <div className="h-28 bg-neutral-100 rounded-lg" />
+            <div className="h-28 bg-neutral-100 rounded-lg" />
+          </div>
+          <div className="h-56 bg-neutral-100 rounded-lg" />
+        </div>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -214,19 +234,29 @@ export default function CartPage() {
               </div>
             </div>
 
-            <Button
-              variant="whatsapp"
-              size="lg"
+            <Link href="/checkout" className="block w-full">
+              <Button
+                variant="primary"
+                size="lg"
+                className="w-full flex items-center justify-center gap-2 bg-brand-primary text-white hover:bg-brand-primary/95 shadow-sm"
+              >
+                <span>Proceed to Checkout</span>
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+
+            <button
+              type="button"
               onClick={() => setShowInterceptModal(true)}
-              className="w-full flex items-center justify-center gap-2"
+              className="w-full text-center text-xs font-semibold text-emerald-700 hover:text-emerald-800 flex items-center justify-center gap-1.5 py-1.5 transition-colors"
             >
-              <MessageCircle className="w-5 h-5" />
-              <span>Confirm Order on WhatsApp</span>
-            </Button>
+              <MessageCircle className="w-4 h-4" />
+              <span>Or Confirm via WhatsApp Intent</span>
+            </button>
 
             <div className="p-3 bg-neutral-50 rounded border border-neutral-200 text-[11px] text-neutral-600 space-y-1">
-              <p className="font-semibold text-neutral-800">Direct Handloom Dispatch</p>
-              <p>Online payment gateways will be live soon. Currently accepting WhatsApp confirmation with UPI or Bank Transfer.</p>
+              <p className="font-semibold text-neutral-800">Secure 256-bit Encrypted Checkout</p>
+              <p>Supports Google Pay, PhonePe, UPI, RuPay Cards, Netbanking & Cash on Delivery (COD).</p>
             </div>
           </div>
         </div>

@@ -1,5 +1,19 @@
 [
   {
+    "id": "enq-1794909333914",
+    "type": "b2b",
+    "fullName": "Boutique Retailer",
+    "businessName": "Heritage Boutique Lucknow",
+    "gstin": "09AAAAA0000A1Z5",
+    "phone": "9415123456",
+    "email": "boutique@example.com",
+    "estimatedVolume": "100-500",
+    "message": "Requesting wholesale price catalog for pure silk scarves.",
+    "status": "new",
+    "createdAt": "2026-11-17T09:55:33.914Z",
+    "updatedAt": "2026-11-17T09:55:33.914Z"
+  },
+  {
     "id": "enq-1794501093004",
     "type": "b2b",
     "fullName": "abc",

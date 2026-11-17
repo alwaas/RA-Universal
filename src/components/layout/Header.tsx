@@ -2,17 +2,22 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { ShoppingBag, User, Menu, X, Search, ShieldCheck } from "lucide-react";
+import { ShoppingBag, User, Menu, X, Search, ShieldCheck, Heart, Truck } from "lucide-react";
 import { useCartStore } from "@/lib/store/useCartStore";
+import { useWishlistStore } from "@/lib/store/useWishlistStore";
 import type { SessionUser } from "@/types";
 
 export const Header: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<SessionUser | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
   const openCart = useCartStore((state) => state.openCart);
   const totalCount = useCartStore((state) => state.getTotalCount());
+  const wishlistIds = useWishlistStore((state) => state.wishlistIds);
 
   useEffect(() => {
+    setIsMounted(true);
+    useWishlistStore.getState().loadWishlist();
     fetch("/api/auth/me")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -55,22 +60,38 @@ export const Header: React.FC = () => {
           <Link href="/b2b" className="hover:text-brand-primary transition-colors">
             B2B Wholesale
           </Link>
-          <Link href="/about" className="hover:text-brand-primary transition-colors">
-            About Us
+          <Link href="/tracking" className="hover:text-brand-primary transition-colors flex items-center gap-1">
+            <Truck className="w-3.5 h-3.5 text-accent-gold" />
+            <span>Track Order</span>
           </Link>
           <Link href="/contact" className="hover:text-brand-primary transition-colors">
             Contact
           </Link>
         </nav>
 
-        {/* Right: Actions (Search, Account, Cart) */}
-        <div className="flex items-center space-x-2 sm:space-x-3">
+        {/* Right: Actions (Search, Wishlist, Account, Cart) */}
+        <div className="flex items-center space-x-1 sm:space-x-2">
           <Link
             href="/shop"
             aria-label="Search collection"
             className="p-2 text-neutral-600 hover:text-brand-primary transition-colors rounded-full hover:bg-neutral-100"
           >
             <Search className="w-5 h-5" />
+          </Link>
+
+          {/* Wishlist Icon */}
+          <Link
+            href="/account/wishlist"
+            aria-label="View Wishlist"
+            className="relative p-2 text-neutral-600 hover:text-rose-600 transition-colors rounded-full hover:bg-neutral-100"
+            title="My Saved Wishlist"
+          >
+            <Heart className="w-5 h-5" />
+            {isMounted && wishlistIds.length > 0 && (
+              <span className="absolute top-1 right-1 w-4 h-4 bg-rose-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                {wishlistIds.length > 9 ? "9+" : wishlistIds.length}
+              </span>
+            )}
           </Link>
 
           {currentUser?.role === "admin" && (
@@ -100,11 +121,11 @@ export const Header: React.FC = () => {
           <button
             type="button"
             onClick={openCart}
-            aria-label={`Open shopping cart with ${totalCount} items`}
+            aria-label={`Open shopping cart with ${isMounted ? totalCount : 0} items`}
             className="relative p-2 text-neutral-700 hover:text-brand-primary transition-colors rounded-full hover:bg-neutral-100"
           >
             <ShoppingBag className="w-5 h-5" />
-            {totalCount > 0 && (
+            {isMounted && totalCount > 0 && (
               <span className="absolute top-1 right-1 w-4 h-4 bg-brand-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                 {totalCount > 9 ? "9+" : totalCount}
               </span>
@@ -143,6 +164,22 @@ export const Header: React.FC = () => {
             className="block text-sm font-semibold text-neutral-800 hover:text-brand-primary py-1"
           >
             About Us & Weavers
+          </Link>
+          <Link
+            href="/tracking"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block text-sm font-semibold text-neutral-800 hover:text-brand-primary py-1 flex items-center gap-1.5"
+          >
+            <Truck className="w-4 h-4 text-accent-gold" />
+            <span>Track Order Pipeline</span>
+          </Link>
+          <Link
+            href="/account/wishlist"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block text-sm font-semibold text-neutral-800 hover:text-brand-primary py-1 flex items-center gap-1.5"
+          >
+            <Heart className="w-4 h-4 text-rose-500" />
+            <span>My Saved Wishlist ({wishlistIds.length})</span>
           </Link>
           <Link
             href="/contact"

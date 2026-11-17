@@ -1,0 +1,62 @@
+[
+  {
+    "id": "cpn-firstfree",
+    "code": "FIRSTFREE",
+    "title": "First Order Free Delivery",
+    "description": "Enjoy zero delivery fee on your first authentic handloom order.",
+    "discountType": "flat",
+    "discountValue": 100,
+    "minOrderAmount": 0,
+    "maxDiscountAmount": 100,
+    "usageLimit": 1000,
+    "usedCount": 42,
+    "isActive": true,
+    "expiresAt": null,
+    "createdAt": "2026-10-18T06:35:57.130Z"
+  },
+  {
+    "id": "cpn-handloom10",
+    "code": "HANDLOOM10",
+    "title": "10% Artisan Discount",
+    "description": "Get 10% off on premium silk dupattas and handloom sets above ₹999.",
+    "discountType": "percentage",
+    "discountValue": 10,
+    "minOrderAmount": 999,
+    "maxDiscountAmount": 300,
+    "usageLimit": 500,
+    "usedCount": 89,
+    "isActive": true,
+    "expiresAt": null,
+    "createdAt": "2026-11-02T06:35:57.131Z"
+  },
+  {
+    "id": "cpn-festive20",
+    "code": "FESTIVE20",
+    "title": "Festive Grand Weaves 20% OFF",
+    "description": "Celebrate with 20% off on all festive handloom orders above ₹1,999.",
+    "discountType": "percentage",
+    "discountValue": 20,
+    "minOrderAmount": 1999,
+    "maxDiscountAmount": 600,
+    "usageLimit": 250,
+    "usedCount": 104,
+    "isActive": true,
+    "expiresAt": null,
+    "createdAt": "2026-11-10T06:35:57.131Z"
+  },
+  {
+    "id": "cpn-bulk15",
+    "code": "BULK15",
+    "title": "Wholesale & Semi-Bulk 15% OFF",
+    "description": "Special boutique tier: 15% off on bulk orders above ₹4,999.",
+    "discountType": "percentage",
+    "discountValue": 15,
+    "minOrderAmount": 4999,
+    "maxDiscountAmount": 1500,
+    "usageLimit": 100,
+    "usedCount": 19,
+    "isActive": true,
+    "expiresAt": null,
+    "createdAt": "2026-11-14T06:35:57.131Z"
+  }
+]

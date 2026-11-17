@@ -1,0 +1,54 @@
+[
+  {
+    "orderNumber": "RA-ORD-TEST-999",
+    "customerName": "Sunita Roy",
+    "customerPhone": "9876543210",
+    "reason": "damaged_in_transit",
+    "resolution": "replacement",
+    "comments": "Corner weave got frayed during courier transit.",
+    "id": "ret-1794913107975",
+    "status": "approved",
+    "createdAt": "2026-11-17T10:58:27.975Z",
+    "updatedAt": "2026-11-17T10:58:27.981Z",
+    "adminNotes": "Approved by QA team"
+  },
+  {
+    "orderNumber": "RA-ORD-38156151",
+    "customerName": "Vikram Sharma",
+    "customerPhone": "9820543210",
+    "reason": "defective_weave",
+    "resolution": "replacement",
+    "comments": "Border zari has loose threads. Kindly courier replacement.",
+    "id": "ret-1794911018395",
+    "status": "pending",
+    "createdAt": "2026-11-17T10:23:38.395Z",
+    "updatedAt": "2026-11-17T10:23:38.395Z"
+  },
+  {
+    "orderNumber": "RA-ORD-TEST-999",
+    "customerName": "Sunita Roy",
+    "customerPhone": "9876543210",
+    "reason": "damaged_in_transit",
+    "resolution": "replacement",
+    "comments": "Corner weave got frayed during courier transit.",
+    "id": "ret-1794910657786",
+    "status": "approved",
+    "createdAt": "2026-11-17T10:17:37.786Z",
+    "updatedAt": "2026-11-17T10:17:37.799Z",
+    "adminNotes": "Approved by QA team"
+  },
+  {
+    "id": "ret-1001",
+    "orderNumber": "RA-ORD-910241",
+    "customerName": "Ananya Mukherjee",
+    "customerPhone": "9830123456",
+    "reason": "damaged_in_transit",
+    "resolution": "replacement",
+    "comments": "Outer parcel bag had a tear and the inner zari corner got slightly frayed. Requesting fresh replacement.",
+    "imageUrl": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600",
+    "status": "pickup_scheduled",
+    "adminNotes": "BlueDart reverse pickup arranged for Nov 18.",
+    "createdAt": "2026-11-15T10:17:37.714Z",
+    "updatedAt": "2026-11-16T10:17:37.715Z"
+  }
+]

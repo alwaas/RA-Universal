@@ -517,4 +517,43 @@ export class ProductService {
 
     return true;
   }
+
+  /**
+   * Decrements stock count for ordered products and auto-updates badges.
+   */
+  static async decrementStock(
+    target: string | { productId: string; quantity: number }[],
+    quantity: number = 1
+  ): Promise<void> {
+    const itemsToDecrement: { productId: string; quantity: number }[] =
+      typeof target === "string" ? [{ productId: target, quantity }] : target;
+
+    const list = getStoredProducts();
+
+    for (const item of itemsToDecrement) {
+      const idx = list.findIndex((p) => p.id === item.productId);
+      if (idx !== -1) {
+        const newStock = Math.max(0, list[idx].stockCount - item.quantity);
+        list[idx].stockCount = newStock;
+        if (newStock === 0) {
+          list[idx].badge = { id: "bdg-out", name: "Out of Stock", slug: "out-of-stock", badgeColor: "gray" };
+        } else if (newStock <= 3 && !list[idx].badge) {
+          list[idx].badge = { id: "bdg-low", name: "Only 2-3 Left", slug: "only-2-3-left", badgeColor: "orange" };
+        }
+      }
+
+      const alive = await isDatabaseAlive();
+      if (alive && db) {
+        try {
+          await db.execute(
+            sql`UPDATE products SET stock_count = GREATEST(0, stock_count - ${item.quantity}) WHERE id = ${item.productId}`
+          );
+        } catch (err) {
+          console.warn("[ProductService] DB decrementStock failed:", err);
+        }
+      }
+    }
+
+    saveStoredProducts(list);
+  }
 }
