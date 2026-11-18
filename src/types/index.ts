@@ -1,4 +1,21 @@
-export type ProductCategory = "scarves_dupattas" | "gamchas";
+export type ProductCategory =
+  | "mens_gamcha"
+  | "womens_dupatta"
+  | "scarves"
+  | "stoles"
+  | "lungi"
+  | "textile_fabrics"
+  | "handloom_products"
+  | "other_textiles"
+  | "scarves_dupattas"
+  | "gamchas"
+  | "dupattas";
+
+export interface WholesaleTier {
+  minQty: number;
+  unitPrice: number;
+  discountPercent?: number;
+}
 
 export type ProductStatus = "active" | "inactive";
 
@@ -46,6 +63,12 @@ export interface Product {
   images: ProductImage[];
   colors: ProductColor[];
   badge?: ProductBadge | null;
+  dimensions?: string;
+  careInstructions?: string;
+  weaveType?: string;
+  originCluster?: string;
+  moq?: number;
+  wholesaleTiers?: WholesaleTier[];
   createdAt: string;
   updatedAt: string;
 }
@@ -266,4 +289,43 @@ export interface AnalyticsReport {
   monthlyRevenue: { month: string; amount: number; count: number }[];
   categoryBreakdown: { category: string; count: number; revenue: number }[];
   lowStockProducts: Product[];
+}
+
+export type QuotationStatus = "draft" | "sent" | "accepted" | "rejected" | "expired";
+
+export interface QuotationItem {
+  productId?: string;
+  sku: string;
+  title: string;
+  colorName?: string | null;
+  quantity: number;
+  unitPrice: number;
+  totalAmount: number;
+}
+
+export interface Quotation {
+  id: string;
+  quoteNumber: string;
+  enquiryId?: string | null;
+  customerName: string;
+  businessName?: string | null;
+  gstin?: string | null;
+  phone: string;
+  email?: string | null;
+  shippingAddress?: string | null;
+  shippingCity?: string | null;
+  shippingState?: string | null;
+  shippingPincode?: string | null;
+  items: QuotationItem[];
+  subtotal: number;
+  gstPercent: number; // e.g. 5%
+  gstAmount: number;
+  shippingCost: number;
+  totalAmount: number;
+  validUntil: string;
+  terms: string;
+  status: QuotationStatus;
+  adminNotes?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }

@@ -11,6 +11,7 @@ import type { ProductCreateInput, ProductUpdateInput } from "@/lib/validation/pr
 import type { Product, ProductCategory } from "@/types";
 import seedProductsData from "@/data/seedProducts.json";
 import { PersistentStore } from "@/lib/storage/persistentStore";
+import { normalizeCategory } from "@/lib/constants/categories";
 
 const STORAGE_KEY = "products.json";
 
@@ -29,9 +30,12 @@ function saveStoredProducts(prods: Product[]): void {
 }
 
 export interface ProductQueryFilters {
-  category?: ProductCategory;
+  category?: ProductCategory | string;
   status?: "active" | "inactive";
   color?: string;
+  fabric?: string;
+  search?: string;
+  inStock?: boolean;
   minPrice?: number;
   maxPrice?: number;
   sort?: "price_asc" | "price_desc" | "discount_desc" | "newest";
@@ -86,7 +90,7 @@ export class ProductService {
         }
 
         if (filters.category) {
-          conditions.push(eq(products.category, filters.category));
+          conditions.push(eq(products.category, filters.category as any));
         }
 
         if (filters.minPrice !== undefined) {
@@ -186,8 +190,33 @@ export class ProductService {
     if (filters.status) {
       items = items.filter((p) => p.status === filters.status);
     }
-    if (filters.category) {
-      items = items.filter((p) => p.category === filters.category);
+    if (filters.category && filters.category !== "all") {
+      const normalizedTarget = normalizeCategory(String(filters.category));
+      items = items.filter((p) => normalizeCategory(p.category) === normalizedTarget);
+    }
+    if (filters.search && filters.search.trim()) {
+      const q = filters.search.toLowerCase().trim();
+      items = items.filter(
+        (p) =>
+          p.title.toLowerCase().includes(q) ||
+          (p.sku || "").toLowerCase().includes(q) ||
+          p.fabric.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q) ||
+          (p.originCluster || "").toLowerCase().includes(q)
+      );
+    }
+    if (filters.fabric && filters.fabric.trim() && filters.fabric !== "all") {
+      const fab = filters.fabric.toLowerCase().trim();
+      items = items.filter((p) => p.fabric.toLowerCase().includes(fab));
+    }
+    if (filters.color && filters.color !== "all") {
+      const col = filters.color.toLowerCase().trim();
+      items = items.filter((p) =>
+        p.colors.some((c) => c.name.toLowerCase().includes(col))
+      );
+    }
+    if (filters.inStock) {
+      items = items.filter((p) => p.stockCount > 0);
     }
     if (filters.minPrice !== undefined) {
       items = items.filter((p) => p.sellingPrice >= filters.minPrice!);
@@ -202,6 +231,8 @@ export class ProductService {
       items.sort((a, b) => b.sellingPrice - a.sellingPrice);
     } else if (filters.sort === "discount_desc") {
       items.sort((a, b) => b.discountPercentage - a.discountPercentage);
+    } else if (filters.sort === "newest") {
+      items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
 
     return { products: items, total: items.length };

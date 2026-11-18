@@ -54,7 +54,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const primaryImage =
     product.images.find((img) => img.isPrimary)?.imageUrl ||
     product.images[0]?.imageUrl ||
-    "https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=800";
+    "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800";
 
   const [activeImage, setActiveImage] = useState<string>(
     product.colors[0]?.imageUrl || primaryImage

@@ -68,7 +68,7 @@ const demoProducts: DemoProduct[] = [
         name: "Traditional Red",
         hexCode: "#DC2626",
         imageUrl:
-          "https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=800&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&auto=format&fit=crop&q=80",
       },
       {
         name: "Forest Green",
@@ -86,7 +86,7 @@ const demoProducts: DemoProduct[] = [
     images: [
       {
         imageUrl:
-          "https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=800&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&auto=format&fit=crop&q=80",
         altText: "Traditional Red Check Gamcha - Front View",
         isPrimary: true,
         displayOrder: 0,
@@ -417,7 +417,7 @@ const demoProducts: DemoProduct[] = [
         name: "Pomegranate Red",
         hexCode: "#B91C1C",
         imageUrl:
-          "https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=800&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&auto=format&fit=crop&q=80",
       },
     ],
     images: [
@@ -437,7 +437,7 @@ const demoProducts: DemoProduct[] = [
       },
       {
         imageUrl:
-          "https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=800&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&auto=format&fit=crop&q=80",
         altText: "Bandhani Georgette Dupatta - Pomegranate Red",
         isPrimary: false,
         displayOrder: 2,

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { ShoppingBag, User, Menu, X, Search, ShieldCheck, Heart, Truck } from "lucide-react";
+import { ShoppingBag, User, Menu, X, Search, ShieldCheck, Heart, Truck, ChevronDown } from "lucide-react";
 import { useCartStore } from "@/lib/store/useCartStore";
 import { useWishlistStore } from "@/lib/store/useWishlistStore";
 import type { SessionUser } from "@/types";
@@ -54,11 +54,76 @@ export const Header: React.FC = () => {
           <Link href="/" className="hover:text-brand-primary transition-colors">
             Home
           </Link>
-          <Link href="/shop" className="hover:text-brand-primary transition-colors">
-            Collection
-          </Link>
-          <Link href="/b2b" className="hover:text-brand-primary transition-colors">
-            B2B Wholesale
+
+          {/* Collection with Dropdown */}
+          <div className="relative group py-2">
+            <Link
+              href="/shop"
+              className="hover:text-brand-primary transition-colors flex items-center gap-1"
+            >
+              <span>Collections</span>
+              <ChevronDown className="w-3.5 h-3.5 transition-transform group-hover:rotate-180" />
+            </Link>
+
+            <div className="absolute top-full left-0 w-72 bg-white border border-neutral-200 rounded-[8px] shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 p-2 z-50 divide-y divide-neutral-100">
+              <div className="pb-1.5 space-y-0.5">
+                <Link
+                  href="/shop?category=mens_gamcha"
+                  className="block px-3 py-1.5 text-xs text-neutral-800 hover:bg-neutral-100 rounded font-medium"
+                >
+                  Men&apos;s Gamcha (Bengal & Sambalpuri)
+                </Link>
+                <Link
+                  href="/shop?category=womens_dupatta"
+                  className="block px-3 py-1.5 text-xs text-neutral-800 hover:bg-neutral-100 rounded font-medium"
+                >
+                  Women&apos;s Dupatta (Banarasi & Chanderi)
+                </Link>
+                <Link
+                  href="/shop?category=scarves"
+                  className="block px-3 py-1.5 text-xs text-neutral-800 hover:bg-neutral-100 rounded font-medium"
+                >
+                  Scarves (Floral & Luxury Satin)
+                </Link>
+                <Link
+                  href="/shop?category=stoles"
+                  className="block px-3 py-1.5 text-xs text-neutral-800 hover:bg-neutral-100 rounded font-medium"
+                >
+                  Stoles (Merino Wool & Linen)
+                </Link>
+                <Link
+                  href="/shop?category=lungi"
+                  className="block px-3 py-1.5 text-xs text-neutral-800 hover:bg-neutral-100 rounded font-medium"
+                >
+                  Lungi & Traditional Bottoms
+                </Link>
+                <Link
+                  href="/shop?category=textile_fabrics"
+                  className="block px-3 py-1.5 text-xs text-neutral-800 hover:bg-neutral-100 rounded font-medium"
+                >
+                  Textile Fabrics (Running Yardage)
+                </Link>
+                <Link
+                  href="/shop?category=handloom_products"
+                  className="block px-3 py-1.5 text-xs text-neutral-800 hover:bg-neutral-100 rounded font-medium"
+                >
+                  Handloom Heritage Special
+                </Link>
+              </div>
+              <div className="pt-1.5">
+                <Link
+                  href="/shop"
+                  className="block px-3 py-1 text-xs font-bold text-brand-primary hover:underline"
+                >
+                  Explore All Collections &rarr;
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <Link href="/b2b" className="hover:text-brand-primary transition-colors flex items-center gap-1.5">
+            <span>B2B Wholesale</span>
+            <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.2 rounded">MOQ</span>
           </Link>
           <Link href="/tracking" className="hover:text-brand-primary transition-colors flex items-center gap-1">
             <Truck className="w-3.5 h-3.5 text-accent-gold" />

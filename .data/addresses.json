@@ -90,5 +90,70 @@
     "id": "addr-1794913107951",
     "userId": "usr-test-1794913107949",
     "createdAt": "2026-11-17T10:58:27.951Z"
+  },
+  {
+    "name": "Aarav Sharma",
+    "phone": "9876543210",
+    "street": "123 Heritage Lane",
+    "city": "Varanasi",
+    "state": "Uttar Pradesh",
+    "pincode": "221005",
+    "isDefault": true,
+    "type": "home",
+    "id": "addr-1794947526202",
+    "userId": "usr-test-1794947526199",
+    "createdAt": "2026-11-17T20:32:06.202Z"
+  },
+  {
+    "name": "Aarav Sharma",
+    "phone": "9876543210",
+    "street": "123 Heritage Lane",
+    "city": "Varanasi",
+    "state": "Uttar Pradesh",
+    "pincode": "221005",
+    "isDefault": true,
+    "type": "home",
+    "id": "addr-1794949695638",
+    "userId": "usr-test-1794949695638",
+    "createdAt": "2026-11-17T21:08:15.638Z"
+  },
+  {
+    "name": "Aarav Sharma",
+    "phone": "9876543210",
+    "street": "123 Heritage Lane",
+    "city": "Varanasi",
+    "state": "Uttar Pradesh",
+    "pincode": "221005",
+    "isDefault": true,
+    "type": "home",
+    "id": "addr-1794980074762",
+    "userId": "usr-test-1794980074759",
+    "createdAt": "2026-11-18T05:34:34.762Z"
+  },
+  {
+    "name": "Aarav Sharma",
+    "phone": "9876543210",
+    "street": "123 Heritage Lane",
+    "city": "Varanasi",
+    "state": "Uttar Pradesh",
+    "pincode": "221005",
+    "isDefault": true,
+    "type": "home",
+    "id": "addr-1794985634857",
+    "userId": "usr-test-1794985634856",
+    "createdAt": "2026-11-18T07:07:14.857Z"
+  },
+  {
+    "name": "Aarav Sharma",
+    "phone": "9876543210",
+    "street": "123 Heritage Lane",
+    "city": "Varanasi",
+    "state": "Uttar Pradesh",
+    "pincode": "221005",
+    "isDefault": true,
+    "type": "home",
+    "id": "addr-1794988263017",
+    "userId": "usr-test-1794988263015",
+    "createdAt": "2026-11-18T07:51:03.017Z"
   }
 ]

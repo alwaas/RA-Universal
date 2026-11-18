@@ -52,8 +52,10 @@ import { AmazonInvoice } from "@/components/admin/AmazonInvoice";
 import { AdminReportsTab } from "@/components/admin/AdminReportsTab";
 import { AdminReturnsTab } from "@/components/admin/AdminReturnsTab";
 import { AdminSettingsTab } from "@/components/admin/AdminSettingsTab";
+import { AdminQuotationsTab } from "@/components/admin/AdminQuotationsTab";
 import { toast } from "@/lib/store/useToastStore";
 import { formatINR } from "@/lib/formatters";
+import { CATEGORIES, getCategoryDefinition, normalizeCategory } from "@/lib/constants/categories";
 import type { Product, ProductCategory, BadgeColor, Order, OrderStatus, CustomerProfile, Coupon } from "@/types";
 
 interface OfferState {
@@ -123,7 +125,7 @@ function AdminDashboardContent() {
     ] as FormColorItem[],
     images: [
       {
-        imageUrl: "https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=800",
+        imageUrl: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800",
         altText: "Front View",
         colorName: "Traditional Red",
         isPrimary: true,
@@ -597,11 +599,12 @@ function AdminDashboardContent() {
   });
 
   const filteredCustomers = customers.filter((cust) => {
+    if (!cust) return false;
     if (!customerSearchQuery.trim()) return true;
     const q = customerSearchQuery.toLowerCase();
     return (
-      cust.fullName.toLowerCase().includes(q) ||
-      cust.phone.includes(q) ||
+      (cust.fullName || "").toLowerCase().includes(q) ||
+      (cust.phone || "").includes(q) ||
       (cust.email && cust.email.toLowerCase().includes(q)) ||
       (cust.addressCity && cust.addressCity.toLowerCase().includes(q)) ||
       (cust.addressPincode && cust.addressPincode.includes(q))
@@ -609,6 +612,7 @@ function AdminDashboardContent() {
   });
 
   const filteredEnquiries = enquiries.filter((enq) => {
+    if (!enq) return false;
     if (enquiryStatusFilter !== "all" && enq.status !== enquiryStatusFilter) {
       return false;
     }
@@ -1059,7 +1063,7 @@ function AdminDashboardContent() {
           ? newProductForm.images
           : [
               {
-                imageUrl: "https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=800",
+                imageUrl: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800",
                 isPrimary: true,
                 altText: "Front View",
                 colorName: newProductForm.colors[0]?.name || "",
@@ -1346,9 +1350,9 @@ function AdminDashboardContent() {
         >
           <ShoppingCart className="w-4 h-4 text-blue-500" />
           <span>Orders ({orders.length})</span>
-          {orders.filter((o) => o.orderStatus === "pending").length > 0 && (
-            <span className="px-1.5 py-0.2 bg-amber-500 text-white rounded-full text-[10px] font-bold">
-              {orders.filter((o) => o.orderStatus === "pending").length}
+          {orders.filter((o) => o?.orderStatus === "pending").length > 0 && (
+            <span className="px-1.5 py-0.5 bg-amber-500 text-white rounded-full text-[10px] font-bold">
+              {orders.filter((o) => o?.orderStatus === "pending").length}
             </span>
           )}
         </Link>
@@ -1411,6 +1415,18 @@ function AdminDashboardContent() {
         >
           <MessageSquare className="w-4 h-4 text-semantic-whatsapp" />
           <span>B2B Enquiries ({enquiries.length})</span>
+        </Link>
+
+        <Link
+          href="/admin?tab=quotations"
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-[6px] transition-colors whitespace-nowrap ${
+            activeTab === "quotations"
+              ? "bg-neutral-900 text-white"
+              : "bg-white text-neutral-700 border border-neutral-200 hover:bg-neutral-50"
+          }`}
+        >
+          <FileText className="w-4 h-4 text-accent-gold" />
+          <span>B2B Quotations</span>
         </Link>
 
         <Link
@@ -1510,14 +1526,14 @@ function AdminDashboardContent() {
             <div className="bg-white p-4 rounded-[8px] border border-neutral-300 space-y-1 shadow-sm">
               <span className="text-xs font-semibold text-neutral-500 uppercase">Men&apos;s Gamchas</span>
               <p className="text-2xl font-bold text-brand-primary">
-                {products.filter((p) => p.category === "gamchas").length}
+                {products.filter((p) => normalizeCategory(p.category) === "mens_gamcha").length}
               </p>
             </div>
 
             <div className="bg-white p-4 rounded-[8px] border border-neutral-300 space-y-1 shadow-sm">
               <span className="text-xs font-semibold text-neutral-500 uppercase">Women&apos;s Dupattas</span>
               <p className="text-2xl font-bold text-accent-gold">
-                {products.filter((p) => p.category === "scarves_dupattas").length}
+                {products.filter((p) => normalizeCategory(p.category) === "womens_dupatta").length}
               </p>
             </div>
           </div>
@@ -1571,7 +1587,7 @@ function AdminDashboardContent() {
                           <div className="flex items-center gap-3">
                             <div className="relative w-10 h-12 bg-neutral-100 rounded overflow-hidden flex-shrink-0">
                               <Image
-                                src={product.images[0]?.imageUrl || "https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=800"}
+                                src={product.images[0]?.imageUrl || "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800"}
                                 alt={product.title}
                                 fill
                                 className="object-cover"
@@ -1588,8 +1604,8 @@ function AdminDashboardContent() {
                           {product.sku || "—"}
                         </td>
 
-                        <td className="py-3 px-4 font-medium capitalize">
-                          {product.category === "gamchas" ? "Men's Gamcha" : "Women's Dupatta"}
+                        <td className="py-3 px-4 font-medium text-xs text-neutral-800">
+                          {getCategoryDefinition(product.category).name}
                         </td>
 
                         <td className="py-3 px-4">
@@ -2107,6 +2123,14 @@ function AdminDashboardContent() {
 
                         <td className="py-3 px-4 whitespace-nowrap text-right">
                           <div className="flex items-center justify-end gap-1.5">
+                            <Link
+                              href="/admin?tab=quotations"
+                              className="px-2 py-1 text-[11px] font-semibold text-brand-primary bg-amber-50 hover:bg-amber-100 rounded border border-amber-300 transition-colors flex items-center gap-1"
+                              title="Create Wholesale Quotation"
+                            >
+                              <FileText className="w-3 h-3" />
+                              <span>Quote</span>
+                            </Link>
                             <a
                               href={whatsappUrl}
                               target="_blank"
@@ -2334,6 +2358,11 @@ function AdminDashboardContent() {
       {activeTab === "settings" && <AdminSettingsTab />}
 
       {/* ================================================================== */}
+      {/* TAB: B2B WHOLESALE QUOTATIONS & PROFORMA (Phase 6) */}
+      {/* ================================================================== */}
+      {activeTab === "quotations" && <AdminQuotationsTab />}
+
+      {/* ================================================================== */}
       {/* TAB 6: ORDERS MANAGEMENT & AMAZON INVOICING */}
       {/* ================================================================== */}
       {activeTab === "orders" && (
@@ -2538,14 +2567,14 @@ function AdminDashboardContent() {
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-1.5">
                               <span className="font-mono font-bold text-neutral-900 text-xs">
-                                #{order.orderNumber}
+                                #{order.orderNumber || order.id?.slice(0, 8)}
                               </span>
                               <button
                                 type="button"
                                 title="Copy Order ID"
                                 onClick={() => {
-                                  navigator.clipboard.writeText(order.orderNumber);
-                                  toast.info(`Copied #${order.orderNumber} to clipboard!`);
+                                  navigator.clipboard.writeText(order.orderNumber || "");
+                                  toast.info(`Copied #${order.orderNumber || ""} to clipboard!`);
                                 }}
                                 className="text-neutral-400 hover:text-neutral-700 p-0.5"
                               >
@@ -2588,10 +2617,10 @@ function AdminDashboardContent() {
                               {(Array.isArray(order.items) ? order.items : []).map((item, idx) => (
                                 <div key={idx} className="text-[11px] text-neutral-800 flex items-start gap-1">
                                   <span className="font-mono font-bold text-neutral-900 bg-neutral-100 px-1 rounded text-[10px]">
-                                    {item.sku || "RA-SKU"}
+                                    {item?.sku || "RA-SKU"}
                                   </span>
                                   <span className="truncate">
-                                    {item.title} {item.colorName ? `(${item.colorName})` : ""} × {item.quantity}
+                                    {item?.title || "Item"} {item?.colorName ? `(${item.colorName})` : ""} × {item?.quantity || 1}
                                   </span>
                                 </div>
                               ))}
@@ -2600,7 +2629,7 @@ function AdminDashboardContent() {
 
                           <td className="py-3 px-4">
                             <span className="font-mono font-bold text-sm text-neutral-900">
-                              {formatINR(order.totalAmount)}
+                              {formatINR(Number(order.totalAmount) || 0)}
                             </span>
                             <span className="block text-[10px] text-neutral-500 uppercase font-medium">
                               {order.paymentStatus === "paid"
@@ -2613,12 +2642,12 @@ function AdminDashboardContent() {
 
                           <td className="py-3 px-4">
                             <select
-                              value={order.orderStatus}
+                              value={order.orderStatus || "pending"}
                               onChange={(e) =>
                                 handleUpdateOrderStatus(order.id, e.target.value as OrderStatus)
                               }
                               className={`h-7 px-2 text-xs font-semibold rounded border capitalize focus:outline-none ${
-                                statusColors[order.orderStatus] || "bg-neutral-100 text-neutral-800 border-neutral-300"
+                                statusColors[order.orderStatus || "pending"] || "bg-neutral-100 text-neutral-800 border-neutral-300"
                               }`}
                             >
                               <option value="pending">Pending</option>
@@ -2664,7 +2693,7 @@ function AdminDashboardContent() {
                               <a
                                 href={`https://wa.me/91${(order.customerPhone || "").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
                                   `Namaste ${order.customerName || "Customer"},\nRegarding your RA Heritage order #${order.orderNumber || ""} for ${formatINR(
-                                    order.totalAmount || 0
+                                    Number(order.totalAmount) || 0
                                   )}.\nWe are preparing your authentic handloom parcel for dispatch!`
                                 )}`}
                                 target="_blank"
@@ -2764,13 +2793,15 @@ function AdminDashboardContent() {
                     </tr>
                   ) : (
                     filteredCustomers.map((cust) => {
-                      const formattedDate = new Date(cust.createdAt).toLocaleDateString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      });
+                      const formattedDate = cust.createdAt
+                        ? new Date(cust.createdAt).toLocaleDateString("en-IN", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })
+                        : "N/A";
 
-                      const fullAddressString = `${cust.fullName}\nPhone: ${cust.phone}\n${
+                      const fullAddressString = `${cust.fullName || "Customer"}\nPhone: ${cust.phone || "N/A"}\n${
                         cust.addressStreet ? `${cust.addressStreet}\n` : ""
                       }${cust.addressCity || ""}, ${cust.addressState || ""} - ${cust.addressPincode || ""}`;
 
@@ -2896,8 +2927,11 @@ function AdminDashboardContent() {
                   }
                   className="w-full h-10 px-3 bg-white border border-neutral-300 rounded-[6px] text-xs font-medium text-neutral-800 focus:outline-none focus:border-brand-primary"
                 >
-                  <option value="scarves_dupattas">Women&apos;s Scarves & Dupattas</option>
-                  <option value="gamchas">Men&apos;s Gamchas</option>
+                  {CATEGORIES.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -3264,8 +3298,11 @@ function AdminDashboardContent() {
                   }
                   className="w-full h-10 px-3 bg-white border border-neutral-300 rounded-[6px] text-xs font-medium text-neutral-800 focus:outline-none focus:border-brand-primary"
                 >
-                  <option value="scarves_dupattas">Women&apos;s Scarves & Dupattas</option>
-                  <option value="gamchas">Men&apos;s Gamchas</option>
+                  {CATEGORIES.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 

@@ -8,11 +8,14 @@ export async function GET(request: NextRequest) {
     const filters: ProductQueryFilters = {
       category: (searchParams.get("category") as any) || undefined,
       color: searchParams.get("color") || undefined,
+      fabric: searchParams.get("fabric") || undefined,
+      search: searchParams.get("search") || searchParams.get("q") || undefined,
+      inStock: searchParams.get("inStock") === "true" ? true : undefined,
       minPrice: searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined,
       maxPrice: searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined,
       sort: (searchParams.get("sort") as any) || "newest",
       page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
-      limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : 12,
+      limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : 50,
       status: "active",
     };
 

@@ -69,7 +69,7 @@ const REGIONS: RegionInfo[] = [
       "Quick-drying open weave matrix",
     ],
     imageUrl:
-      "https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=800",
+      "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800",
     categoryFilter: "gamchas",
   },
   {

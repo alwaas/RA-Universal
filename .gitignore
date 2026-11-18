@@ -32,3 +32,6 @@ Thumbs.db
 # TypeScript declaration cache
 *.tsbuildinfo
 next-env.d.ts
+
+# Scratch & diagnostic scripts
+scratch/

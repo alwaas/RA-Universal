@@ -703,10 +703,10 @@ export default function CheckoutPage() {
                       type="submit"
                       variant="primary"
                       size="lg"
-                      className="w-full sm:w-auto bg-brand-primary text-white flex items-center justify-center gap-2"
+                      className="w-full sm:w-auto bg-brand-primary text-white flex items-center justify-center gap-2 py-3 px-6 text-sm sm:text-base font-bold shadow-md hover:bg-brand-primary-hover transition-all rounded-lg"
                     >
                       <span>Proceed to Review & Offers</span>
-                      <ArrowRight className="w-4 h-4" />
+                      <ArrowRight className="w-4 h-4 flex-shrink-0" />
                     </Button>
                   </div>
                 </form>
@@ -844,12 +844,13 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Back / Next Buttons */}
-                <div className="pt-2 flex items-center justify-between gap-3">
+                <div className="pt-3 flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-3">
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
+                    size="md"
                     onClick={() => setCurrentStep(1)}
+                    className="w-full sm:w-auto justify-center text-xs sm:text-sm font-semibold py-2.5"
                   >
                     Back to Address
                   </Button>
@@ -858,10 +859,10 @@ export default function CheckoutPage() {
                     variant="primary"
                     size="lg"
                     onClick={handleProceedToPayment}
-                    className="bg-brand-primary text-white flex items-center gap-2"
+                    className="w-full sm:w-auto bg-brand-primary text-white flex items-center justify-center gap-2 py-3 px-6 text-sm sm:text-base font-bold shadow-md hover:bg-brand-primary-hover transition-all rounded-lg"
                   >
                     <span>Proceed to Payment</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-4 h-4 flex-shrink-0" />
                   </Button>
                 </div>
               </div>
@@ -961,12 +962,13 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Final Order Submit Button */}
-                <div className="pt-3 flex items-center justify-between gap-3">
+                <div className="pt-4 flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-3">
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
+                    size="md"
                     onClick={() => setCurrentStep(2)}
+                    className="w-full sm:w-auto justify-center text-xs sm:text-sm font-semibold py-2.5"
                   >
                     Back to Items
                   </Button>
@@ -976,16 +978,16 @@ export default function CheckoutPage() {
                     size="lg"
                     disabled={isProcessingPayment}
                     onClick={handleFinalOrderSubmit}
-                    className="flex-1 bg-brand-primary text-white font-bold flex items-center justify-center gap-2"
+                    className="w-full sm:flex-1 bg-brand-primary text-white font-bold flex items-center justify-center gap-2 py-3 px-4 text-sm sm:text-base shadow-md hover:bg-brand-primary-hover active:scale-[0.99] transition-all text-center rounded-lg"
                   >
-                    <span>
+                    <span className="leading-snug break-words">
                       {isProcessingPayment
                         ? "Confirming Order..."
                         : paymentMethod === "cod"
                         ? `Place Cash on Delivery Order (${formatINR(finalPayable)})`
                         : `Pay ${formatINR(finalPayable)} Securely`}
                     </span>
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-4 h-4 flex-shrink-0" />
                   </Button>
                 </div>
               </div>

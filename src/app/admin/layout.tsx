@@ -1,6 +1,20 @@
 import React from "react";
 import Link from "next/link";
-import { Package, Tag, Gift, MessageSquare, ArrowLeft, Shield } from "lucide-react";
+import {
+  Package,
+  Tag,
+  Gift,
+  MessageSquare,
+  ArrowLeft,
+  Shield,
+  FileText,
+  ShoppingCart,
+  Users,
+  Percent,
+  BarChart3,
+  RotateCcw,
+  Settings,
+} from "lucide-react";
 import { AdminSignOutButton } from "@/components/admin/AdminSignOutButton";
 
 export default function AdminLayout({
@@ -21,41 +35,97 @@ export default function AdminLayout({
               </span>
             </div>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-brand-primary text-white">
-              DEMO
+              LIVE
             </span>
           </div>
 
           <nav className="p-3 space-y-1 text-xs font-semibold text-neutral-300">
             <Link
               href="/admin?tab=products"
-              className="flex items-center gap-3 px-3 py-2.5 rounded hover:bg-neutral-800 hover:text-white transition-colors"
+              className="flex items-center gap-3 px-3 py-2 rounded hover:bg-neutral-800 hover:text-white transition-colors"
             >
               <Package className="w-4 h-4 text-accent-gold" />
               <span>Products CRUD</span>
             </Link>
 
             <Link
-              href="/admin?tab=tags"
-              className="flex items-center gap-3 px-3 py-2.5 rounded hover:bg-neutral-800 hover:text-white transition-colors"
+              href="/admin?tab=orders"
+              className="flex items-center gap-3 px-3 py-2 rounded hover:bg-neutral-800 hover:text-white transition-colors"
             >
-              <Tag className="w-4 h-4 text-semantic-warning" />
-              <span>Badges & Tags</span>
+              <ShoppingCart className="w-4 h-4 text-blue-400" />
+              <span>Orders Management</span>
+            </Link>
+
+            <Link
+              href="/admin?tab=customers"
+              className="flex items-center gap-3 px-3 py-2 rounded hover:bg-neutral-800 hover:text-white transition-colors"
+            >
+              <Users className="w-4 h-4 text-emerald-400" />
+              <span>Customers Directory</span>
+            </Link>
+
+            <Link
+              href="/admin?tab=quotations"
+              className="flex items-center gap-3 px-3 py-2 rounded hover:bg-neutral-800 hover:text-white transition-colors"
+            >
+              <FileText className="w-4 h-4 text-accent-gold" />
+              <span>B2B Quotations</span>
+            </Link>
+
+            <Link
+              href="/admin?tab=enquiries"
+              className="flex items-center gap-3 px-3 py-2 rounded hover:bg-neutral-800 hover:text-white transition-colors"
+            >
+              <MessageSquare className="w-4 h-4 text-semantic-whatsapp" />
+              <span>B2B Enquiries</span>
+            </Link>
+
+            <Link
+              href="/admin?tab=coupons"
+              className="flex items-center gap-3 px-3 py-2 rounded hover:bg-neutral-800 hover:text-white transition-colors"
+            >
+              <Percent className="w-4 h-4 text-purple-400" />
+              <span>Coupons & Promos</span>
             </Link>
 
             <Link
               href="/admin?tab=offers"
-              className="flex items-center gap-3 px-3 py-2.5 rounded hover:bg-neutral-800 hover:text-white transition-colors"
+              className="flex items-center gap-3 px-3 py-2 rounded hover:bg-neutral-800 hover:text-white transition-colors"
             >
               <Gift className="w-4 h-4 text-brand-primary" />
               <span>Offer Popups</span>
             </Link>
 
             <Link
-              href="/admin?tab=enquiries"
-              className="flex items-center gap-3 px-3 py-2.5 rounded hover:bg-neutral-800 hover:text-white transition-colors"
+              href="/admin?tab=tags"
+              className="flex items-center gap-3 px-3 py-2 rounded hover:bg-neutral-800 hover:text-white transition-colors"
             >
-              <MessageSquare className="w-4 h-4 text-semantic-whatsapp" />
-              <span>B2B Enquiries</span>
+              <Tag className="w-4 h-4 text-semantic-warning" />
+              <span>Badges & Tags</span>
+            </Link>
+
+            <Link
+              href="/admin?tab=reports"
+              className="flex items-center gap-3 px-3 py-2 rounded hover:bg-neutral-800 hover:text-white transition-colors"
+            >
+              <BarChart3 className="w-4 h-4 text-blue-400" />
+              <span>Sales & Reports</span>
+            </Link>
+
+            <Link
+              href="/admin?tab=returns"
+              className="flex items-center gap-3 px-3 py-2 rounded hover:bg-neutral-800 hover:text-white transition-colors"
+            >
+              <RotateCcw className="w-4 h-4 text-amber-400" />
+              <span>Returns & Claims</span>
+            </Link>
+
+            <Link
+              href="/admin?tab=settings"
+              className="flex items-center gap-3 px-3 py-2 rounded hover:bg-neutral-800 hover:text-white transition-colors"
+            >
+              <Settings className="w-4 h-4 text-neutral-400" />
+              <span>Store Settings</span>
             </Link>
           </nav>
         </div>

@@ -1,5 +1,65 @@
 [
   {
+    "id": "rev-1794988263021",
+    "productId": "prod-test-1794988263021",
+    "userId": null,
+    "customerName": "Radha Sharma",
+    "rating": 5,
+    "title": "Flawless Weave",
+    "comment": "The handloom texture is outstanding, soft and regal.",
+    "isVerifiedPurchase": true,
+    "isApproved": true,
+    "createdAt": "2026-11-18T07:51:03.021Z"
+  },
+  {
+    "id": "rev-1794985634873",
+    "productId": "prod-test-1794985634873",
+    "userId": null,
+    "customerName": "Radha Sharma",
+    "rating": 5,
+    "title": "Flawless Weave",
+    "comment": "The handloom texture is outstanding, soft and regal.",
+    "isVerifiedPurchase": true,
+    "isApproved": true,
+    "createdAt": "2026-11-18T07:07:14.873Z"
+  },
+  {
+    "id": "rev-1794980074768",
+    "productId": "prod-test-1794980074768",
+    "userId": null,
+    "customerName": "Radha Sharma",
+    "rating": 5,
+    "title": "Flawless Weave",
+    "comment": "The handloom texture is outstanding, soft and regal.",
+    "isVerifiedPurchase": true,
+    "isApproved": true,
+    "createdAt": "2026-11-18T05:34:34.768Z"
+  },
+  {
+    "id": "rev-1794949695643",
+    "productId": "prod-test-1794949695643",
+    "userId": null,
+    "customerName": "Radha Sharma",
+    "rating": 5,
+    "title": "Flawless Weave",
+    "comment": "The handloom texture is outstanding, soft and regal.",
+    "isVerifiedPurchase": true,
+    "isApproved": true,
+    "createdAt": "2026-11-17T21:08:15.643Z"
+  },
+  {
+    "id": "rev-1794947526209",
+    "productId": "prod-test-1794947526208",
+    "userId": null,
+    "customerName": "Radha Sharma",
+    "rating": 5,
+    "title": "Flawless Weave",
+    "comment": "The handloom texture is outstanding, soft and regal.",
+    "isVerifiedPurchase": true,
+    "isApproved": true,
+    "createdAt": "2026-11-17T20:32:06.209Z"
+  },
+  {
     "id": "rev-1794913107956",
     "productId": "prod-test-1794913107956",
     "userId": null,

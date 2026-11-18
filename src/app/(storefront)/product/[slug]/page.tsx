@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
+  ArrowRight,
   Check,
   ShieldCheck,
   Truck,
@@ -17,6 +18,11 @@ import {
   RefreshCw,
   Heart,
   CreditCard,
+  Building2,
+  Sparkles,
+  Layers,
+  Scissors,
+  Info,
 } from "lucide-react";
 import { PriceDisplay } from "@/components/product/PriceDisplay";
 import { ColorSelector } from "@/components/product/ColorSelector";
@@ -28,6 +34,8 @@ import { toast } from "@/lib/store/useToastStore";
 import { ProductReviews } from "@/components/product/ProductReviews";
 import { RelatedProducts } from "@/components/product/RelatedProducts";
 import { BuyNowInterceptModal } from "@/components/cart/BuyNowInterceptModal";
+import { getCategoryDefinition } from "@/lib/constants/categories";
+import { formatINR } from "@/lib/formatters";
 import type { Product, ProductColor } from "@/types";
 
 export default function ProductDetailPage({
@@ -136,7 +144,7 @@ export default function ProductDetailPage({
             prod.colors[0]?.imageUrl ||
             prod.images[initialIdx]?.imageUrl ||
             prod.images[0]?.imageUrl ||
-            "https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=800";
+            "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800";
           setActiveImageUrl(defaultImg);
 
           setSelectedColor(prod.colors[0]);
@@ -458,7 +466,7 @@ export default function ProductDetailPage({
           <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-xs font-bold uppercase tracking-wider text-accent-gold">
-                {product.category === "gamchas" ? "Men's Cotton Gamcha" : "Women's Dupatta & Scarf"}
+                {getCategoryDefinition(product.category)?.name || "Authentic Handloom Collection"}
               </span>
               {product.sku && (
                 <span className="text-xs font-mono font-semibold bg-neutral-100 text-neutral-700 border border-neutral-300/80 px-2.5 py-0.5 rounded">
@@ -501,14 +509,94 @@ export default function ProductDetailPage({
               </p>
             </div>
 
-            {/* Fabric & Narrative */}
-            <div className="space-y-2 text-xs sm:text-sm text-neutral-700 leading-relaxed pt-2">
-              <p><strong>Fabric Composition:</strong> {product.fabric}</p>
+            {/* Detailed Textile Specifications Card */}
+            <div className="bg-neutral-50 border border-neutral-200 rounded-[8px] p-3.5 space-y-2 text-xs">
+              <div className="flex items-center gap-1.5 font-bold text-neutral-800 uppercase tracking-wide border-b border-neutral-200 pb-1.5">
+                <Layers className="w-3.5 h-3.5 text-accent-gold" />
+                <span>Textile Specifications</span>
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-1 text-neutral-700">
+                <div>
+                  <span className="text-neutral-500 block text-[11px]">Fabric Composition:</span>
+                  <span className="font-semibold text-neutral-900">{product.fabric}</span>
+                </div>
+                <div>
+                  <span className="text-neutral-500 block text-[11px]">Dimensions:</span>
+                  <span className="font-semibold text-neutral-900">{product.dimensions || "Standard Indian Handloom Size"}</span>
+                </div>
+                <div>
+                  <span className="text-neutral-500 block text-[11px]">Weave Technique:</span>
+                  <span className="font-semibold text-neutral-900">{product.weaveType || "Traditional Handloom Weave"}</span>
+                </div>
+                <div>
+                  <span className="text-neutral-500 block text-[11px]">Origin Cluster:</span>
+                  <span className="font-semibold text-neutral-900">{product.originCluster || "Varanasi / Bengal Weavers"}</span>
+                </div>
+              </div>
+              <div className="pt-2 border-t border-neutral-200">
+                <span className="text-neutral-500 block text-[11px]">Care Instructions:</span>
+                <span className="text-neutral-800 text-[11px]">{product.careInstructions || "Gentle cold handwash with mild detergent, shade dry, warm iron if needed."}</span>
+              </div>
+            </div>
+
+            {/* B2B Wholesale & Volume Pricing Box */}
+            <div className="bg-amber-50/70 border border-amber-200/80 rounded-[8px] p-3.5 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-amber-900 font-bold text-xs uppercase tracking-wide">
+                  <Building2 className="w-4 h-4 text-amber-700" />
+                  <span>Wholesale & Bulk Trade Rates</span>
+                </div>
+                <span className="text-[11px] font-mono font-semibold bg-white border border-amber-300 text-amber-900 px-2 py-0.5 rounded">
+                  MOQ: {product.moq || 25} Pcs
+                </span>
+              </div>
+
+              {/* Tiers Grid */}
+              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="bg-white border border-amber-200 rounded p-2">
+                  <span className="text-[10px] text-neutral-500 block">25 – 49 Pcs</span>
+                  <span className="font-bold text-neutral-900 font-mono">
+                    {formatINR(Math.round(product.sellingPrice * 0.85))}
+                  </span>
+                  <span className="text-[10px] text-emerald-700 block font-semibold">15% Off</span>
+                </div>
+                <div className="bg-white border border-amber-200 rounded p-2">
+                  <span className="text-[10px] text-neutral-500 block">50 – 99 Pcs</span>
+                  <span className="font-bold text-neutral-900 font-mono">
+                    {formatINR(Math.round(product.sellingPrice * 0.78))}
+                  </span>
+                  <span className="text-[10px] text-emerald-700 block font-semibold">22% Off</span>
+                </div>
+                <div className="bg-white border border-amber-300 rounded p-2 bg-amber-100/40">
+                  <span className="text-[10px] text-neutral-500 block">100+ Pcs</span>
+                  <span className="font-bold text-neutral-900 font-mono">
+                    {formatINR(Math.round(product.sellingPrice * 0.70))}
+                  </span>
+                  <span className="text-[10px] text-emerald-700 block font-semibold">30% Off</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-1">
+                <p className="text-[11px] text-amber-800">
+                  Tax invoice with GST input credit available for registered businesses.
+                </p>
+                <Link
+                  href={`/b2b?sku=${product.sku || ""}&title=${encodeURIComponent(product.title)}&cat=${product.category}`}
+                  className="inline-flex items-center gap-1 text-xs font-bold text-brand-primary hover:underline flex-shrink-0 ml-2"
+                >
+                  <span>Inquire Wholesale</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Narrative */}
+            <div className="space-y-1 text-xs sm:text-sm text-neutral-700 leading-relaxed pt-1">
               <p className="text-neutral-600">{product.description}</p>
             </div>
 
             {/* Trust Markers */}
-            <div className="grid grid-cols-2 gap-3 pt-3 text-xs text-neutral-600">
+            <div className="grid grid-cols-2 gap-3 pt-2 text-xs text-neutral-600">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-accent-gold flex-shrink-0" />
                 <span>100% Handloom Weave</span>

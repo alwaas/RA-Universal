@@ -6,6 +6,7 @@ import { WishlistService } from "../services/wishlist.service";
 import { ReturnsService } from "../services/returns.service";
 import { SettingsService } from "../services/settings.service";
 import { ReportsService } from "../services/reports.service";
+import { QuotationService } from "../services/quotation.service";
 
 interface TestCase {
   category: string;
@@ -201,6 +202,52 @@ it("Reports Service", "Aggregate revenue metrics, order status, and low stock co
   expect(report.totalRevenue).toBeGreaterThan(0);
   expect(report.dailyRevenue.length).toBe(7);
   expect(report.categoryBreakdown.length).toBe(2);
+});
+
+// 9. B2B Quotations Tests (Phase 6)
+it("Quotation Service", "Create wholesale quotation with GST calculation and volume pricing", async () => {
+  const quote = await QuotationService.create({
+    customerName: "Sunil Narang",
+    businessName: "Narang Silks & Handlooms",
+    gstin: "07AAACN1234A1Z2",
+    phone: "9811223344",
+    email: "sunil@narangsilks.in",
+    shippingCity: "Delhi",
+    shippingState: "Delhi",
+    items: [
+      {
+        sku: "RA-DUP-004",
+        title: "Chanderi Silk Dupatta",
+        quantity: 50,
+        unitPrice: 650,
+        totalAmount: 32500,
+      },
+    ],
+    gstPercent: 5,
+    shippingCost: 500,
+    validDays: 20,
+    terms: "50% advance, balance before dispatch.",
+  });
+
+  expect(quote.id).toBeDefined();
+  expect(quote.quoteNumber.startsWith("RA-QT-")).toBe(true);
+  expect(quote.subtotal).toBe(32500);
+  expect(quote.gstAmount).toBe(1625); // 5% of 32500
+  expect(quote.totalAmount).toBe(34625); // 32500 + 1625 + 500
+  expect(quote.status).toBe("draft");
+});
+
+it("Quotation Service", "Retrieve quotation by number and update negotiation status", async () => {
+  const all = await QuotationService.getAll();
+  expect(all.length).toBeGreaterThan(0);
+  const first = all[0];
+
+  const fetched = await QuotationService.getByNumber(first.quoteNumber);
+  expect(fetched?.id).toBe(first.id);
+
+  const updated = await QuotationService.updateStatus(first.id, "accepted", "Confirmed by client via WhatsApp");
+  expect(updated?.status).toBe("accepted");
+  expect(updated?.adminNotes).toBe("Confirmed by client via WhatsApp");
 });
 
 async function run() {

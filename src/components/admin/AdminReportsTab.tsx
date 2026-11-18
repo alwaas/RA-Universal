@@ -16,6 +16,7 @@ import {
 import { formatINR } from "@/lib/formatters";
 import { Button } from "@/components/ui/Button";
 import { toast } from "@/lib/store/useToastStore";
+import { getCategoryDefinition } from "@/lib/constants/categories";
 import type { AnalyticsReport } from "@/types";
 
 export function AdminReportsTab() {
@@ -211,8 +212,8 @@ export function AdminReportsTab() {
             {data?.categoryBreakdown?.map((cat) => (
               <div key={cat.category} className="space-y-1">
                 <div className="flex justify-between text-xs">
-                  <span className="font-semibold text-neutral-800 capitalize">
-                    {cat.category === "gamcha" ? "Men's Gamchas" : "Women's Dupattas"}
+                  <span className="font-semibold text-neutral-800">
+                    {getCategoryDefinition(cat.category).name}
                   </span>
                   <span className="font-mono font-medium text-neutral-700">
                     {formatINR(cat.revenue)} ({cat.count} units)
@@ -287,8 +288,8 @@ export function AdminReportsTab() {
                         {p.sku || "RA-SKU"}
                       </span>
                     </td>
-                    <td className="py-3 px-4 capitalize">
-                      {p.category === "gamchas" ? "Men's Gamcha" : "Women's Dupatta"}
+                    <td className="py-3 px-4 text-xs font-medium text-neutral-800">
+                      {getCategoryDefinition(p.category).name}
                     </td>
                     <td className="py-3 px-4 font-mono font-medium">
                       {formatINR(p.sellingPrice)}

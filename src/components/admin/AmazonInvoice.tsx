@@ -99,7 +99,8 @@ export const AmazonInvoice: React.FC<AmazonInvoiceProps> = ({ orders, onClose })
       {/* Printable Invoice Container */}
       <div className="printable-invoice-container w-full max-w-4xl space-y-8 print:space-y-0 print:w-full print:max-w-none">
         {orders.map((order, orderIdx) => {
-          const invoiceNumber = `IN-${order.orderNumber.replace(/[^0-9]/g, "").slice(-8) || order.id.slice(0, 8)}`;
+          const orderNum = order.orderNumber || order.id || "ORD";
+          const invoiceNumber = `IN-${orderNum.replace(/[^0-9]/g, "").slice(-8) || order.id.slice(0, 8)}`;
           const invoiceDate = new Date(order.createdAt).toLocaleDateString("en-IN", {
             day: "2-digit",
             month: "2-digit",

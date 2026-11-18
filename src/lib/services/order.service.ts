@@ -69,7 +69,7 @@ const inMemoryOrders: Order[] = [
         quantity: 1,
         sellingPrice: 199,
         mrp: 399,
-        imageUrl: "https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=800",
+        imageUrl: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800",
       },
     ],
     notes: "Please pack for gift delivery",

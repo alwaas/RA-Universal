@@ -20,8 +20,17 @@ import { relations, sql } from "drizzle-orm";
 // ============================================================================
 export const userRoleEnum = pgEnum("user_role", ["customer", "admin"]);
 export const productCategoryEnum = pgEnum("product_category", [
+  "mens_gamcha",
+  "womens_dupatta",
+  "scarves",
+  "stoles",
+  "lungi",
+  "textile_fabrics",
+  "handloom_products",
+  "other_textiles",
   "scarves_dupattas",
   "gamchas",
+  "dupattas",
 ]);
 export const productStatusEnum = pgEnum("product_status", ["active", "inactive"]);
 export const badgeColorEnum = pgEnum("badge_color_enum", [
@@ -105,6 +114,12 @@ export const products = pgTable(
     sellingPrice: numeric("selling_price", { precision: 10, scale: 2 }).notNull(),
     status: productStatusEnum("status").default("active").notNull(),
     stockCount: integer("stock_count").default(10).notNull(),
+    dimensions: varchar("dimensions", { length: 100 }),
+    careInstructions: text("care_instructions"),
+    weaveType: varchar("weave_type", { length: 120 }),
+    originCluster: varchar("origin_cluster", { length: 150 }),
+    moq: integer("moq").default(1),
+    wholesaleTiersJson: jsonb("wholesale_tiers_json"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
